@@ -8,7 +8,7 @@ Decision:
 Use seeded demo users and an Admin / Employee role switcher.
 
 Reason:
-The assignment is about inventory request workflows, stock correctness, and
+The project focuses on inventory request workflows, stock correctness, and
 reviewable implementation. Full authentication would add scope without proving
 the core system better.
 
@@ -25,7 +25,7 @@ Use Supabase for hosted PostgreSQL and Drizzle ORM for schema, migrations, and
 type-safe data access.
 
 Reason:
-The assignment requires Drizzle ORM. Supabase is used as the database hosting
+The original project requirements specify Drizzle ORM. Supabase is used as the database hosting
 provider, not as a replacement query layer.
 
 Implementation:
