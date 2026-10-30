@@ -4,7 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Inventory Request System",
+  title: "Inventory Requests",
   description: "Internal inventory request and fulfillment dashboard",
 };
 

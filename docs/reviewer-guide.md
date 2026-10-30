@@ -5,7 +5,7 @@ demonstration of internal operations workflows.
 
 ## One-Minute Summary
 
-Inventory Request System is an inventory request module. Employees can browse
+Inventory Requests is an inventory request module. Employees can browse
 inventory and submit one or more requested item lines. Admins can review
 requests, approve or reject pending requests, and fulfill approved requests
 only when every requested item has sufficient stock.

@@ -15,7 +15,7 @@ export function AppHeader({
       <div className="header-title">
         <div>
           <span className="breadcrumb">Internal Inventory Operations</span>
-          <h1>Inventory Request System</h1>
+          <h1>Inventory Requests</h1>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
-# Inventory Request System Documentation
+# Inventory Requests Documentation
 
 This folder explains the system design, product behavior, engineering
-decisions, and validation strategy for the Inventory Request System.
+decisions, and validation strategy for Inventory Requests.
 
 The documentation is written for technical reviewers who want to understand
 how the project is structured, why specific tradeoffs were made, and where the

@@ -22,7 +22,7 @@ describe("AppSidebar", () => {
   it("shows only primary workspace navigation to admins", () => {
     render(<AppSidebar currentUser={{ ...baseUser, role: "admin" }} />);
 
-    expect(screen.getByTitle("Inventory Request System")).toBeVisible();
+    expect(screen.getByTitle("Inventory Requests")).toBeVisible();
     expect(screen.getByRole("link", { name: "Dashboard" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Inventory" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Requests" })).toBeVisible();
@@ -37,7 +37,7 @@ describe("AppSidebar", () => {
   it("keeps employee navigation scoped to primary workspaces", () => {
     render(<AppSidebar currentUser={{ ...baseUser, role: "employee" }} />);
 
-    expect(screen.getByTitle("Inventory Request System")).toBeVisible();
+    expect(screen.getByTitle("Inventory Requests")).toBeVisible();
     expect(screen.getByRole("link", { name: "Dashboard" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Inventory" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Requests" })).toBeVisible();

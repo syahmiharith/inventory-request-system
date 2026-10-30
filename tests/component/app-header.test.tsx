@@ -23,7 +23,7 @@ describe("AppHeader", () => {
   it("shows the demo user switcher and current viewer summary", () => {
     render(<AppHeader currentUser={users[0]} demoUsers={users} />);
     expect(
-      screen.getByRole("heading", { name: "Inventory Request System" }),
+      screen.getByRole("heading", { name: "Inventory Requests" }),
     ).toBeVisible();
     expect(screen.getByText("Viewing as")).toBeVisible();
     expect(screen.getByTestId("profile-summary")).toHaveTextContent("AA");
