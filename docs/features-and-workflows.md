@@ -2,7 +2,7 @@
 
 ## Product Goal
 
-BloomThis Internal Tool is designed as a compact internal operations dashboard.
+Inventory Requests is designed as a compact internal operations dashboard.
 It lets employees request inventory and lets admins manage request review and
 fulfillment while protecting stock correctness.
 

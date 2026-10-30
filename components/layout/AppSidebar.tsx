@@ -116,13 +116,9 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
       style={style}
     >
       <div className="sidebar-inner" data-testid="sidebar">
-        <Link
-          className="sidebar-brand"
-          href="/"
-          title="BloomThis Internal Tool"
-        >
-          <span className="brand-mark">B</span>
-          {!collapsed ? <strong>BloomThis Internal Tool</strong> : null}
+        <Link className="sidebar-brand" href="/" title="Inventory Requests">
+          <span className="brand-mark">IR</span>
+          {!collapsed ? <strong>Inventory Requests</strong> : null}
         </Link>
 
         <div

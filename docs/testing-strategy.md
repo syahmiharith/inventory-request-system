@@ -1,6 +1,6 @@
 # Testing Strategy
 
-The test strategy focuses on assignment-critical correctness first, then UI and
+The test strategy focuses on workflow-critical correctness first, then UI and
 deployment confidence.
 
 ## Test Priorities

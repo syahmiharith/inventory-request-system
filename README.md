@@ -1,4 +1,4 @@
-# BloomThis Internal Tool - Inventory Request Module
+# Inventory Requests
 
 Full-stack internal inventory request module built with Next.js, TypeScript,
 Drizzle ORM, and Supabase PostgreSQL.
@@ -8,6 +8,13 @@ inventory, admins review and approve requests, and approved requests are
 fulfilled only when stock is available. The implementation emphasizes
 server-side correctness, transaction-safe stock mutation, clear role separation,
 and reviewer-verifiable workflows.
+
+## Project Context
+
+Originally developed as a technical exercise, this is a portfolio demonstration,
+not a company production system or a claim of employment. The preserved
+[development history](docs/history/development-log.md) records the original context
+and former branding; current product names are neutral.
 
 ## Executive Summary
 
@@ -600,7 +607,7 @@ migration layer.
 - Authentication is simulated with seeded demo users and a cookie.
 - Supabase Auth is not implemented.
 - Notification workflows are not implemented.
-- Procurement and supplier workflows are not part of the assignment-facing UI.
+- Procurement and supplier workflows are not part of the demo UI.
 - Load testing is not included.
 - Production use requires additional identity, authorization, monitoring, and
   operational controls.
@@ -616,3 +623,9 @@ AI assisted with planning, implementation support, test coverage, and
 documentation drafting. Business rules, database logic, validation, request
 status transitions, tests, and final documentation were reviewed and adjusted
 manually.
+
+### Explicit Demo Seeding Target
+
+The optional `scripts/seed-production-api.mjs` helper requires `DEMO_BASE_URL`
+to point to a demo deployment you are authorized to modify. It creates demo
+records; it is not run by build or CI. No hosted target is selected by default.
