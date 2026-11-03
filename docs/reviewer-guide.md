@@ -1,11 +1,11 @@
 # Reviewer Guide
 
-This guide gives a fast path for reviewing the project as an internship
-technical assignment and as a small internal operations product.
+This guide gives a fast path for reviewing the project as a portfolio
+demonstration of internal operations workflows.
 
 ## One-Minute Summary
 
-BloomThis Internal Tool is an inventory request module. Employees can browse
+Inventory Request System is an inventory request module. Employees can browse
 inventory and submit one or more requested item lines. Admins can review
 requests, approve or reject pending requests, and fulfill approved requests
 only when every requested item has sufficient stock.
@@ -67,7 +67,7 @@ The core implementation focus is correctness:
 
 ## What Was Intentionally Not Built
 
-This assignment intentionally does not include:
+This demo intentionally does not include:
 
 - real Supabase Auth
 - email notifications

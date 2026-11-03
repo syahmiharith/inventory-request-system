@@ -1,4 +1,8 @@
-# AI-Assisted Development Log — May 18, 2026
+# Historical AI-Assisted Development Log — May 18, 2026
+
+> Archived context, not current product branding. References to the original
+> exercise and former company-themed name are retained for truthful provenance.
+> They do not imply company affiliation, employment, or production adoption.
 
 > Note: This document is a reconstructed and polished AI-assisted development
 > log. The original chat was long-running and part of the context was compacted

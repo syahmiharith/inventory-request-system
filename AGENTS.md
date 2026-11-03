@@ -2,7 +2,7 @@
 
 ## Project
 
-Build a simple Inventory Request Module for an internship technical assignment.
+Maintain the Inventory Request System portfolio project.
 
 Stack:
 
@@ -21,7 +21,7 @@ Next.js Server Actions / Route Handlers
 -> Supabase Postgres
 
 Supabase is the hosted PostgreSQL backend.
-Drizzle remains the ORM because the assignment requires Drizzle.
+Drizzle remains the ORM as part of the original project requirements.
 
 Do not replace Drizzle data access with supabase-js queries unless explicitly instructed.
 

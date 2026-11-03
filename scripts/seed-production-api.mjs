@@ -1,4 +1,10 @@
-const baseUrl = "https://bloomthis-inventory-next.vercel.app";
+// Set an explicit authorized demo target; never default to a hosted database.
+const baseUrl = process.env.DEMO_BASE_URL;
+if (!baseUrl) {
+  throw new Error(
+    "Set DEMO_BASE_URL to the demo deployment you intend to seed.",
+  );
+}
 const targetItems = 75;
 const targetRequests = 40;
 const categories = [

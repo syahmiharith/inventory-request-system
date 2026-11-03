@@ -119,10 +119,10 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
         <Link
           className="sidebar-brand"
           href="/"
-          title="BloomThis Internal Tool"
+          title="Inventory Request System"
         >
-          <span className="brand-mark">B</span>
-          {!collapsed ? <strong>BloomThis Internal Tool</strong> : null}
+          <span className="brand-mark">IR</span>
+          {!collapsed ? <strong>Inventory Request System</strong> : null}
         </Link>
 
         <div

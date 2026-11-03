@@ -43,7 +43,7 @@ async function createRequestFixture(
     {
       name: `Test Item ${crypto.randomUUID()}`,
       sku: `SKU-${crypto.randomUUID()}`,
-      category: "Assignment",
+      category: "Workflow Test",
       warehouse: "Main Warehouse",
       unit: "Each",
       quantityOnHand,
@@ -58,7 +58,7 @@ async function createRequestFixture(
       warehouse: "Main Warehouse",
       requiredBy: "2026-05-25",
       priority: "normal",
-      reason: "Assignment verification",
+      reason: "Workflow verification",
       items: [{ itemId: item.id, quantityRequested }],
     },
     employee,
@@ -67,11 +67,11 @@ async function createRequestFixture(
   return { admin, employee, item, request };
 }
 
-describe("assignment verification flows", () => {
+describe("inventory workflow verification", () => {
   beforeEach(resetDatabase);
   afterEach(resetDatabase);
 
-  it("creates inventory items with assignment fields", async () => {
+  it("creates inventory items with required fields", async () => {
     const { admin } = await createUsers();
 
     const item = await createItem(
