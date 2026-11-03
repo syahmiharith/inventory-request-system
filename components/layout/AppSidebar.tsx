@@ -116,9 +116,13 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
       style={style}
     >
       <div className="sidebar-inner" data-testid="sidebar">
-        <Link className="sidebar-brand" href="/" title="Inventory Requests">
+        <Link
+          className="sidebar-brand"
+          href="/"
+          title="Inventory Request System"
+        >
           <span className="brand-mark">IR</span>
-          {!collapsed ? <strong>Inventory Requests</strong> : null}
+          {!collapsed ? <strong>Inventory Request System</strong> : null}
         </Link>
 
         <div

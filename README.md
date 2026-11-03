@@ -1,4 +1,4 @@
-# Inventory Requests
+# Inventory Request System
 
 Full-stack internal inventory request module built with Next.js, TypeScript,
 Drizzle ORM, and Supabase PostgreSQL.
