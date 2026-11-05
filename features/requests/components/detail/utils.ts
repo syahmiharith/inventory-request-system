@@ -29,7 +29,12 @@ export function formatHistoryMeta(
       ? ` · ${entry.fromStatus ?? "new"} to ${entry.toStatus ?? "none"}`
       : "";
 
-  return `${entry.actorName} · ${entry.actorRole}${transition}`;
+  const movement =
+    typeof entry.metadata.before === "number" &&
+    typeof entry.metadata.after === "number"
+      ? ` · Stock ${entry.metadata.before} → ${entry.metadata.after}`
+      : "";
+  return `${entry.actorName} · ${entry.actorRole}${transition}${movement}`;
 }
 
 function capitalize(value: string) {

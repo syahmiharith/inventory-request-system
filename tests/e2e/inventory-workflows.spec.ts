@@ -121,6 +121,27 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Fulfill" })).toBeDisabled();
   await expect(page.getByText("Insufficient stock").first()).toBeVisible();
   await expect(page.getByText("Approved").first()).toBeVisible();
+  await page.getByLabel("Quantity received").fill("10000");
+  await page
+    .getByLabel("Delivery reference or reason")
+    .fill("E2E delivery D-101");
+  await page
+    .getByRole("button", { name: "Record stock received", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Stock received" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Fulfill", exact: true }),
+  ).toBeEnabled();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Fulfill", exact: true }).click();
+  await expect(
+    page.getByText("Request Fulfilled", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Record stock received" }),
+  ).toHaveCount(0);
 });
 
 test("core routes respond within local performance budget", async ({

@@ -13,6 +13,7 @@ import {
   createRequest,
   updateRequestStatus,
 } from "@/features/requests/services/request.service";
+import { recordStockReceived } from "@/features/requests/services/stock-receipt.service";
 import { resetDatabase } from "./test-db";
 
 async function createFixture(
@@ -207,6 +208,7 @@ describe("request approval and fulfillment", () => {
     expect(history.map((entry) => entry.action)).toEqual([
       "request_created",
       "request_approved",
+      "stock_issued",
       "request_fulfilled",
     ]);
   });
@@ -458,5 +460,70 @@ describe("request approval and fulfillment", () => {
         employee,
       ),
     ).rejects.toThrow("Duplicate request items");
+  });
+  it("receives a delivery once across concurrent retries and then issues a shortage", async () => {
+    const { admin, item, request } = await createFixture(1, 3);
+    await updateRequestStatus(request.id, { status: "approved" }, admin.name);
+    await expect(
+      updateRequestStatus(request.id, { status: "fulfilled" }, admin.name),
+    ).rejects.toThrow("Insufficient stock");
+    const receipt = {
+      key: crypto.randomUUID(),
+      requestId: request.id,
+      itemId: item.id,
+      quantity: 2,
+      reason: "Delivery D-101",
+    };
+    await Promise.all([
+      recordStockReceived(receipt, admin),
+      recordStockReceived(receipt, admin),
+    ]);
+    await recordStockReceived(receipt, admin);
+    const [received] = await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.id, item.id));
+    expect(received.quantityOnHand).toBe(3);
+    await expect(
+      recordStockReceived({ ...receipt, quantity: 3 }, admin),
+    ).rejects.toThrow("already been used");
+    await updateRequestStatus(request.id, { status: "fulfilled" }, admin.name);
+    const [issued] = await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.id, item.id));
+    expect(issued.quantityOnHand).toBe(0);
+    const movements = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.requestId, request.id));
+    expect(
+      movements.filter((row) => row.action === "stock_received"),
+    ).toHaveLength(1);
+    expect(
+      movements.find((row) => row.action === "stock_received")?.metadata,
+    ).toMatchObject({ before: 1, after: 3 });
+    expect(
+      movements.find((row) => row.action === "stock_issued")?.metadata,
+    ).toMatchObject({ before: 3, after: 0 });
+  });
+
+  it("rejects employee deliveries and invalid quantities", async () => {
+    const { employee, admin, item, request } = await createFixture(1, 3);
+    const receipt = {
+      key: crypto.randomUUID(),
+      requestId: request.id,
+      itemId: item.id,
+      quantity: 2,
+      reason: "Delivery",
+    };
+    await expect(recordStockReceived(receipt, employee)).rejects.toThrow(
+      "not allowed",
+    );
+    for (const quantity of [0, -1, 1.5]) {
+      await expect(
+        recordStockReceived({ ...receipt, quantity }, admin),
+      ).rejects.toThrow();
+    }
   });
 });

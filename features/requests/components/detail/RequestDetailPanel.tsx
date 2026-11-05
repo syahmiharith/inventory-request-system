@@ -1,9 +1,12 @@
+import { StockReceiptForm } from "../StockReceiptForm";
+import { randomUUID } from "node:crypto";
 import { RequestDetailHero } from "./RequestDetailHero";
 import { RequestHistoryTimeline } from "./RequestHistoryTimeline";
 import { RequestImpactList } from "./RequestImpactList";
 import type { RequestDetail } from "./types";
 
 export function RequestDetailPanel({
+  isAdmin,
   query,
   request,
 }: {
@@ -38,6 +41,20 @@ export function RequestDetailPanel({
       </section>
 
       <RequestImpactList request={request} />
+      {isAdmin && request.status === "approved" ? (
+        <section className="detail-section">
+          <h3>Record stock received</h3>
+          <p>
+            Record a delivery, then review availability before issuing this
+            request.
+          </p>
+          <StockReceiptForm
+            requestId={request.id}
+            receiptKey={randomUUID()}
+            items={request.items}
+          />
+        </section>
+      ) : null}
       <RequestHistoryTimeline request={request} />
     </div>
   );

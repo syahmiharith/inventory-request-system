@@ -483,12 +483,13 @@ async function fulfillRequest(
   parsed: ReturnType<typeof updateRequestStatusSchema.parse>,
   actorName: string,
 ) {
-  const lines = await db
-    .select()
-    .from(inventoryRequestItems)
-    .where(eq(inventoryRequestItems.requestId, request.id));
-
   return db.transaction(async (tx) => {
+    const lines = await tx
+      .select()
+      .from(inventoryRequestItems)
+      .where(eq(inventoryRequestItems.requestId, request.id))
+      .orderBy(asc(inventoryRequestItems.itemId));
+
     const [updated] = await tx
       .update(inventoryRequests)
       .set({
@@ -523,13 +524,35 @@ async function fulfillRequest(
             sql`${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved} >= ${quantityToFulfill}`,
           ),
         )
-        .returning({ id: inventoryItems.id });
+        .returning({
+          id: inventoryItems.id,
+          quantityOnHand: inventoryItems.quantityOnHand,
+        });
 
       if (!stockUpdate) {
+        const [item] = await tx
+          .select()
+          .from(inventoryItems)
+          .where(eq(inventoryItems.id, line.itemId));
+        const available = item
+          ? item.quantityOnHand - item.quantityReserved
+          : 0;
         throw new DomainError(
-          "Insufficient stock. Request cannot be fulfilled.",
+          `Insufficient stock for ${item?.name ?? "item"}. Requested ${quantityToFulfill}, available ${available}, short ${Math.max(0, quantityToFulfill - available)}. The request remains approved.`,
         );
       }
+      await createAuditLog(tx, {
+        requestId: request.id,
+        itemId: line.itemId,
+        actorName,
+        actorRole: "Admin",
+        action: "stock_issued",
+        metadata: {
+          quantity: quantityToFulfill,
+          before: stockUpdate.quantityOnHand + quantityToFulfill,
+          after: stockUpdate.quantityOnHand,
+        },
+      });
     }
 
     await createAuditLog(tx, {
@@ -603,6 +626,8 @@ async function getRequestItems(requestIds: string[]) {
       itemName: inventoryItems.name,
       itemSku: inventoryItems.sku,
       itemCategory: inventoryItems.category,
+      onHandQuantity: inventoryItems.quantityOnHand,
+      heldQuantity: inventoryItems.quantityReserved,
       availableQuantity: sql<number>`${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved}`,
       requestedQuantity: inventoryRequestItems.quantityRequested,
       approvedQuantity: inventoryRequestItems.quantityApproved,
