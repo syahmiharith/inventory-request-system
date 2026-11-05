@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SidePanelResizeHandle } from "./SidePanelResizeHandle";
@@ -21,6 +22,7 @@ export function DetailSidePanel({
   footer?: React.ReactNode;
   title: string;
 }) {
+  const router = useRouter();
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
   useEffect(() => {
@@ -34,6 +36,16 @@ export function DetailSidePanel({
     localStorage.setItem(STORAGE_KEY, String(width));
   }, [width]);
 
+  useEffect(() => {
+    function close(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        sessionStorage.setItem("restore-row-focus", "1");
+        router.push(closeHref);
+      }
+    }
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [closeHref, router]);
   const style = useMemo(() => ({ flexBasis: width, width }), [width]);
 
   function startResize(event: React.PointerEvent<HTMLDivElement>) {
@@ -65,6 +77,7 @@ export function DetailSidePanel({
       <div className="detail-side-panel-header">
         <strong>{title}</strong>
         <Link
+          onClick={() => sessionStorage.setItem("restore-row-focus", "1")}
           aria-label="Close detail panel"
           className="icon-button"
           href={closeHref}

@@ -131,7 +131,8 @@ async function fulfillWhileLocked(
             AND usename = current_user
             AND wait_event_type = 'Lock'
             AND (query LIKE 'update "inventory_requests"%'
-                 OR query LIKE 'update "inventory_items"%')
+                 OR query LIKE 'update "inventory_items"%'
+                 OR (query LIKE 'select%inventory_requests%' AND query LIKE '%for update%'))
         `);
         if (waiting.length === 2) return;
         await new Promise((resolve) => setTimeout(resolve, 10));
@@ -348,7 +349,7 @@ describe("request approval and fulfillment", () => {
     ).toHaveLength(1);
     const failure = results.find((result) => result.status === "rejected");
     expect(failure?.status === "rejected" && failure.reason.message).toContain(
-      "Only approved requests can be fulfilled",
+      "Cannot change request status from fulfilled to fulfilled.",
     );
     const [stock] = await db
       .select()
@@ -525,5 +526,38 @@ describe("request approval and fulfillment", () => {
         recordStockReceived({ ...receipt, quantity }, admin),
       ).rejects.toThrow();
     }
+  });
+  it("replays request creation and issuance after lost responses", async () => {
+    const { admin, employee, item } = await createFixture(10, 1);
+    const input = {
+      key: crypto.randomUUID(),
+      department: "Marketing",
+      warehouse: "Main Warehouse",
+      requiredBy: "2026-11-12",
+      priority: "normal",
+      reason: "Idempotent request",
+      items: [{ itemId: item.id, quantityRequested: 2 }],
+    };
+    const [first, retry] = await Promise.all([
+      createRequest(input, employee),
+      createRequest(input, employee),
+    ]);
+    expect(retry.id).toBe(first.id);
+    await expect(
+      createRequest({ ...input, reason: "Changed payload" }, employee),
+    ).rejects.toThrow("already been used");
+    await updateRequestStatus(first.id, { status: "approved" }, admin.name);
+    const issue = { status: "fulfilled", key: crypto.randomUUID() };
+    await Promise.all([
+      updateRequestStatus(first.id, issue, admin.name),
+      updateRequestStatus(first.id, issue, admin.name),
+    ]);
+    await updateRequestStatus(first.id, issue, admin.name);
+    const [stock] = await db
+      .select()
+      .from(inventoryItems)
+      .where(eq(inventoryItems.id, item.id));
+    expect(stock.quantityOnHand).toBe(8);
+    await expectFulfillmentEvents(first.id, 1);
   });
 });

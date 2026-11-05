@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { recordStockReceivedAction } from "../actions/recordStockReceived";
 
 export function StockReceiptForm({
   requestId,
@@ -13,8 +11,7 @@ export function StockReceiptForm({
   receiptKey: string;
   items: { itemId: string; itemName: string }[];
 }) {
-  const router = useRouter();
-  const [key, setKey] = useState(receiptKey);
+  const [key] = useState(receiptKey);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string }>();
 
@@ -25,13 +22,25 @@ export function StockReceiptForm({
     const input = new FormData(form);
     setPending(true);
     try {
-      const response = await recordStockReceivedAction(input);
-      setResult(response);
-      if (response.ok) {
-        form.reset();
-        setKey(crypto.randomUUID());
-        router.refresh();
+      const response = await fetch(`/api/requests/${requestId}/receipts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(input)),
+      });
+      const outcome = await response.json();
+      if (!response.ok) {
+        setResult({
+          ok: false,
+          message: outcome.error ?? "Unable to record delivery. Please retry.",
+        });
+        return;
       }
+      const url = new URL(window.location.href);
+      url.searchParams.set(
+        "success",
+        "Stock received. Review availability and issue the request.",
+      );
+      window.location.assign(url.toString());
     } catch {
       setResult({
         ok: false,
@@ -49,16 +58,14 @@ export function StockReceiptForm({
       <input type="hidden" name="key" value={key} />
       <fieldset disabled={pending} className="form-grid">
         <legend>Delivery details</legend>
-        <label>
-          Item
-          <select name="itemId" required>
-            {items.map((item) => (
-              <option key={item.itemId} value={item.itemId}>
-                {item.itemName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <label htmlFor={`receipt-item-${requestId}`}>Item</label>
+        <select id={`receipt-item-${requestId}`} name="itemId" required>
+          {items.map((item) => (
+            <option key={item.itemId} value={item.itemId}>
+              {item.itemName}
+            </option>
+          ))}
+        </select>
         <label>
           Quantity received
           <input

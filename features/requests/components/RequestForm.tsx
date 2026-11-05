@@ -30,6 +30,11 @@ export function RequestForm({
   requesterName: string;
 }) {
   const router = useRouter();
+  const [reason, setReason] = useState("");
+  const [requiredBy, setRequiredBy] = useState(() =>
+    new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+  );
+  const [submissionKey] = useState(() => crypto.randomUUID());
   const [dirty, setDirty] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [nextLineIndex, setNextLineIndex] = useState(1);
@@ -236,6 +241,7 @@ export function RequestForm({
           </p>
         ) : null}
 
+        <input type="hidden" name="key" value={submissionKey} />
         <div className="form-grid two-column-form">
           <label className="field">
             <span>Requester name</span>
@@ -251,11 +257,25 @@ export function RequestForm({
           </label>
 
           <label className="field">
+            <span>Required by</span>
+            <input
+              className="input"
+              type="date"
+              name="requiredBy"
+              value={requiredBy}
+              onChange={(event) => setRequiredBy(event.target.value)}
+              required
+            />
+            <FieldError message={state.errors?.requiredBy} />
+          </label>
+          <label className="field">
             <span>Reason</span>
             <textarea
               aria-invalid={Boolean(state.errors?.reason)}
               className="input textarea"
               name="reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
               required
             />
             <FieldError message={state.errors?.reason} />
@@ -400,8 +420,8 @@ export function RequestForm({
                     aria-live="polite"
                     className="alert alert-info line-warning"
                   >
-                    Requested quantity exceeds current stock. Fulfillment will
-                    be blocked until enough stock exists.
+                    Requested quantity exceeds current stock. Issuance will be
+                    blocked until enough stock exists.
                   </p>
                 ) : null}
               </div>

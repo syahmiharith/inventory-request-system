@@ -12,6 +12,7 @@ export default function Error({
       <button className="button button-secondary" onClick={reset} type="button">
         Try again
       </button>
+      <a href="/api/demo/start">Start a new demo</a>
     </div>
   );
 }

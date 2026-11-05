@@ -17,8 +17,12 @@ export function handleRouteError(error: unknown) {
     );
   }
 
+  console.error("Inventory demo operation failed");
   return NextResponse.json(
-    { error: "Unexpected server error." },
-    { status: 500 },
+    {
+      error:
+        "Service unavailable. Your operation could not be confirmed. Refresh and retry.",
+    },
+    { status: 503 },
   );
 }

@@ -14,7 +14,7 @@ export function RequestImpactList({
           <p>
             {request.status === "fulfilled"
               ? "Issued quantities and current stock position."
-              : "Current stock and fulfillment preview."}
+              : "Current stock and issuance preview."}
           </p>
         </div>
       </div>

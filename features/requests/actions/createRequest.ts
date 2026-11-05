@@ -23,6 +23,7 @@ export async function createInventoryRequestAction(
     return { errors: { requesterName: "Requester name is required." } };
   }
 
+  let createdId = "";
   try {
     const itemIds = formData.getAll("itemId");
     const quantities = formData.getAll("quantityRequested");
@@ -53,15 +54,19 @@ export async function createInventoryRequestAction(
 
     const request = await createRequest(
       {
+        key: formData.get("key") || undefined,
         department: actor.department,
         warehouse: "Main Warehouse",
-        requiredBy: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        requiredBy:
+          formData.get("requiredBy") ||
+          new Date(new Date().setUTCHours(0, 0, 0, 0) + 7 * 86400000),
         priority: "normal",
         reason: formData.get("reason"),
         items: requestItems,
       },
       actor,
     );
+    createdId = request.id;
     revalidateRequestReads(request.id);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -84,7 +89,7 @@ export async function createInventoryRequestAction(
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/requests");
-  redirect("/requests?success=Request created successfully.");
+  redirect(`/requests/${createdId}?success=Request+created+successfully.`);
 }
 
 function numberFromForm(value: FormDataEntryValue | null) {

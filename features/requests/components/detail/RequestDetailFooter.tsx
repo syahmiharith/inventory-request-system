@@ -1,6 +1,5 @@
 import type { RequestStatus } from "@/lib/constants";
-import { updateRequestDetailStatusAction } from "@/features/requests/actions/updateRequestDetailStatus";
-import { StatusActionForm } from "../StatusActionForm";
+import { DetailStatusForm } from "../DetailStatusForm";
 import type { RequestDetail } from "./types";
 
 export function RequestDetailFooter({
@@ -38,8 +37,8 @@ export function RequestDetailFooter({
       />
       {request.status === "approved" && !canFulfill ? (
         <p className="alert alert-error">
-          Fulfillment is disabled because one or more requested items do not
-          have enough available stock.
+          Issuance is disabled because one or more requested items do not have
+          enough available stock.
         </p>
       ) : null}
     </div>
@@ -60,14 +59,12 @@ function AdminActions({
   if (status === "pending") {
     return (
       <div className="request-action-buttons">
-        <StatusActionForm
-          action={updateRequestDetailStatusAction}
+        <DetailStatusForm
           requestId={requestId}
           status="approved"
           label="Approve"
         />
-        <StatusActionForm
-          action={updateRequestDetailStatusAction}
+        <DetailStatusForm
           requestId={requestId}
           status="rejected"
           label="Reject"
@@ -80,14 +77,13 @@ function AdminActions({
   if (status === "approved") {
     return (
       <div className="request-action-buttons">
-        <StatusActionForm
-          action={updateRequestDetailStatusAction}
+        <DetailStatusForm
           disabled={!canFulfill}
-          disabledReason="Insufficient stock for fulfillment."
+          disabledReason="Insufficient stock for issuance."
           fulfillPreview={fulfillPreview}
           requestId={requestId}
           status="fulfilled"
-          label="Fulfill"
+          label="Issue"
         />
       </div>
     );

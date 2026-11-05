@@ -9,7 +9,7 @@ import {
   type SQLWrapper,
 } from "drizzle-orm";
 import { cache } from "react";
-import { db } from "@/db";
+import { getScopedDb, limitMutation } from "@/db/scoped";
 import {
   auditLogs,
   inventoryItems,
@@ -144,7 +144,9 @@ async function listItemsRaw(
   }
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [totalRow] = await db
+  const [totalRow] = await (
+    await getScopedDb()
+  )
     .select({ totalCount: sql<number>`count(*)::int` })
     .from(inventoryItems)
     .where(whereClause);
@@ -153,7 +155,7 @@ async function listItemsRaw(
   const safePage = Math.min(page, pageCount);
 
   const [rows, categories] = await Promise.all([
-    db
+    (await getScopedDb())
       .select({
         id: inventoryItems.id,
         name: inventoryItems.name,
@@ -263,7 +265,7 @@ export async function listItemCategories() {
 const listItemCategoriesCached = () =>
   cachedRead(
     async function listItemCategoriesCached() {
-      const rows = await db
+      const rows = await (await getScopedDb())
         .selectDistinct({ category: inventoryItems.category })
         .from(inventoryItems)
         .orderBy(asc(inventoryItems.category));
@@ -327,7 +329,9 @@ async function listRequestableItemsRaw(
     );
   }
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const [totalRow] = await db
+  const [totalRow] = await (
+    await getScopedDb()
+  )
     .select({ totalCount: sql<number>`count(*)::int` })
     .from(inventoryItems)
     .where(whereClause);
@@ -335,7 +339,9 @@ async function listRequestableItemsRaw(
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, pageCount);
 
-  const rows = await db
+  const rows = await (
+    await getScopedDb()
+  )
     .select(requestableItemSelection(available))
     .from(inventoryItems)
     .where(whereClause)
@@ -344,7 +350,7 @@ async function listRequestableItemsRaw(
     .offset((safePage - 1) * pageSize);
 
   if (selectedId && !rows.some((item) => item.id === selectedId)) {
-    const [selectedItem] = await db
+    const [selectedItem] = await (await getScopedDb())
       .select(requestableItemSelection(available))
       .from(inventoryItems)
       .where(eq(inventoryItems.id, selectedId))
@@ -384,7 +390,9 @@ export async function getItemById(id: string) {
 
 async function getItemByIdRaw(id: string) {
   const available = sql<number>`${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved}`;
-  const [item] = await db
+  const [item] = await (
+    await getScopedDb()
+  )
     .select({
       id: inventoryItems.id,
       name: inventoryItems.name,
@@ -431,7 +439,9 @@ async function getItemAnalytics(itemId: string) {
   const activeDemand = activeDemandExpression();
   const available = sql<number>`max(${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved})`;
   const stockHealthPercent = stockHealthExpression(available, activeDemand);
-  const [row] = await db
+  const [row] = await (
+    await getScopedDb()
+  )
     .select({
       activeDemand,
       approvedRequestCount: sql<number>`count(distinct ${inventoryRequests.id}) filter (
@@ -463,7 +473,9 @@ async function getItemAnalytics(itemId: string) {
 }
 
 async function getItemRecentRequests(itemId: string) {
-  const rows = await db
+  const rows = await (
+    await getScopedDb()
+  )
     .select({
       id: inventoryRequests.id,
       requestCode: inventoryRequests.requestCode,
@@ -490,7 +502,9 @@ async function getItemRecentRequests(itemId: string) {
 }
 
 async function getItemRecentFulfillments(itemId: string) {
-  const rows = await db
+  const rows = await (
+    await getScopedDb()
+  )
     .select({
       id: auditLogs.id,
       actorName: auditLogs.actorName,
@@ -529,7 +543,7 @@ const getStockOverviewDataCached = cache(
 
     const [pendingDemandRows, relatedRequestRows, recentActivityRows] =
       await Promise.all([
-        db
+        (await getScopedDb())
           .select({
             itemId: inventoryRequestItems.itemId,
             pendingDemand: sql<number>`coalesce(sum(${inventoryRequestItems.quantityRequested}) filter (
@@ -543,7 +557,7 @@ const getStockOverviewDataCached = cache(
           )
           .where(inArray(inventoryRequestItems.itemId, itemIds))
           .groupBy(inventoryRequestItems.itemId),
-        db
+        (await getScopedDb())
           .select({
             itemId: inventoryRequestItems.itemId,
             requestId: inventoryRequests.id,
@@ -567,7 +581,7 @@ const getStockOverviewDataCached = cache(
             ),
           )
           .orderBy(desc(inventoryRequests.createdAt)),
-        db
+        (await getScopedDb())
           .select({
             itemId: inventoryRequestItems.itemId,
             id: auditLogs.id,
@@ -677,7 +691,9 @@ const getStockOverviewDataCached = cache(
 );
 
 async function listAllItemsForOverview() {
-  const rows = await db
+  const rows = await (
+    await getScopedDb()
+  )
     .select({
       id: inventoryItems.id,
       name: inventoryItems.name,
@@ -731,11 +747,15 @@ async function withDevTiming<T>(label: string, fn: () => Promise<T>) {
 }
 
 export async function createItem(input: unknown, actorName: string) {
+  await limitMutation();
   const parsed = createItemSchema.parse(input);
 
   try {
-    const [item] = await db.insert(inventoryItems).values(parsed).returning();
-    await createAuditLog(db, {
+    const [item] = await (await getScopedDb())
+      .insert(inventoryItems)
+      .values(parsed)
+      .returning();
+    await createAuditLog(await getScopedDb(), {
       itemId: item.id,
       actorName,
       action: "inventory_item_created",

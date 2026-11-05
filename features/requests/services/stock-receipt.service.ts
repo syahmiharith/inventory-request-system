@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db";
+import { getScopedDb, limitMutation } from "@/db/scoped";
 import {
   auditLogs,
   inventoryItems,
@@ -22,8 +22,9 @@ const receiptSchema = z.object({
 
 export async function recordStockReceived(input: unknown, actor: User) {
   assertAdminRole(actor.role);
+  await limitMutation();
   const receipt = receiptSchema.parse(input);
-  return db.transaction(async (tx) => {
+  return (await getScopedDb()).transaction(async (tx) => {
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtextextended(${receipt.key}, 0))`,
     );

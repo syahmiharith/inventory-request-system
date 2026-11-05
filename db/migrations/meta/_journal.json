@@ -36,6 +36,20 @@
       "when": 1778947200000,
       "tag": "0004_add_request_history",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793836800000,
+      "tag": "0005_demo_workspaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793890495170,
+      "tag": "0006_restrict_demo_data_api",
+      "breakpoints": true
     }
   ]
 }

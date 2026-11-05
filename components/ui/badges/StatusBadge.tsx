@@ -10,7 +10,11 @@ export function StatusBadge({ status }: { status: RequestStatus }) {
           ? "badge-status-rejected"
           : "badge-status-pending";
 
-  return <span className={`badge ${tone}`}>{capitalize(status)}</span>;
+  return (
+    <span className={`badge ${tone}`}>
+      {status === "fulfilled" ? "Issued" : capitalize(status)}
+    </span>
+  );
 }
 
 function capitalize(value: string) {

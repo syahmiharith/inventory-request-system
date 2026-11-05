@@ -80,7 +80,7 @@ test("employee creates request and cannot see admin actions", async ({
   });
   await expect(page.getByText("Admin Actions")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Fulfill" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Issue" })).toHaveCount(0);
 });
 
 test("admin approves and fulfills a request", async ({ page }) => {
@@ -95,14 +95,15 @@ test("admin approves and fulfills a request", async ({ page }) => {
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve" }).click();
-  await expect(page.getByText("Approved").first()).toBeVisible();
+  await expect(
+    page
+      .getByTestId("request-detail-panel")
+      .getByText("Approved", { exact: true }),
+  ).toBeVisible();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Fulfill" }).click();
-  await expect(page.getByText("Fulfilled").first()).toBeVisible();
-  await expect(
-    page.getByText("Request Fulfilled", { exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "Issue" }).click();
+  await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
 });
 
 test("insufficient stock blocks fulfillment", async ({ page }) => {
@@ -116,11 +117,19 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
   await page.goto(requestUrl);
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve" }).click();
-  await expect(page.getByText("Approved").first()).toBeVisible();
+  await expect(
+    page
+      .getByTestId("request-detail-panel")
+      .getByText("Approved", { exact: true }),
+  ).toBeVisible();
 
-  await expect(page.getByRole("button", { name: "Fulfill" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Issue" })).toBeDisabled();
   await expect(page.getByText("Insufficient stock").first()).toBeVisible();
-  await expect(page.getByText("Approved").first()).toBeVisible();
+  await expect(
+    page
+      .getByTestId("request-detail-panel")
+      .getByText("Approved", { exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Quantity received").fill("10000");
   await page
     .getByLabel("Delivery reference or reason")
@@ -132,13 +141,11 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
     page.getByRole("status").filter({ hasText: "Stock received" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Fulfill", exact: true }),
+    page.getByRole("button", { name: "Issue", exact: true }),
   ).toBeEnabled();
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Fulfill", exact: true }).click();
-  await expect(
-    page.getByText("Request Fulfilled", { exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "Issue", exact: true }).click();
+  await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Record stock received" }),
   ).toHaveCount(0);
@@ -183,10 +190,9 @@ async function createEmployeeRequest(
   await page.getByLabel("Quantity").fill(String(quantity));
   await page.getByLabel("Reason").fill(reason);
   await page.getByRole("button", { name: /Submit \d+ item request/ }).click();
-  await expect(page.getByTestId("requests-page")).toBeVisible();
-  await page.getByRole("row").filter({ hasText: /^REQ-/ }).first().click();
+  await expect(page).toHaveURL(/\/requests\/[a-f0-9-]+/);
   await expect(page.getByTestId("request-detail-panel")).toBeVisible();
-  await expect(page.getByText(reason)).toBeVisible();
+  await expect(page.getByText(reason, { exact: true })).toBeVisible();
   return page.url();
 }
 
