@@ -78,6 +78,21 @@ test("independent sessions reject cross-workspace writes and survive another vis
       { data: { status: "approved" } },
     );
     expect(forbidden.status()).toBe(404);
+    const adminA = (await (await a.request.get("/api/demo-user")).json())
+      .currentUser;
+    const otherEmployee = (await (await b.request.get("/api/demo-user")).json())
+      .currentUser;
+    expect(
+      (
+        await a.request.patch(`/api/requests/${requestsA[0].id}/status`, {
+          data: { status: "approved", approverId: otherEmployee.id },
+        })
+      ).ok(),
+    ).toBe(true);
+    const approved = (
+      await (await a.request.get("/api/requests")).json()
+    ).rows.find((row: { id: string }) => row.id === requestsA[0].id);
+    expect(approved.approverId).toBe(adminA.id);
     const foreignItems = (await (await b.request.get("/api/items")).json())
       .items;
     const creation = await a.request.post("/api/requests", {

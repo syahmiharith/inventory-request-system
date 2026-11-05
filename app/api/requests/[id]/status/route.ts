@@ -14,7 +14,7 @@ export async function PATCH(
     const { id } = await context.params;
     const updated = await updateRequestStatus(
       id,
-      await request.json(),
+      { ...(await request.json()), approverId: actor.id },
       actor.name,
     );
     revalidatePath("/");
