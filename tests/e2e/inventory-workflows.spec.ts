@@ -154,6 +154,7 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
 test("core routes respond within local performance budget", async ({
   page,
 }) => {
+  await switchDemoUser(page, "Aisha Admin (admin)");
   const routes = [
     "/",
     "/inventory",
