@@ -10,6 +10,7 @@ vi.mock("next/navigation", () => ({
 
 const users = [
   {
+    workspaceId: "00000000-0000-0000-0000-000000000000",
     id: "11111111-1111-4111-8111-111111111111",
     name: "Aisha Admin",
     email: "admin@inventory.local",

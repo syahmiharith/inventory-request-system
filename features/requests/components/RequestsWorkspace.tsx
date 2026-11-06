@@ -109,13 +109,25 @@ export async function RequestsWorkspace({
     selectedRequestId !== undefined &&
     !pagedRequests.some((request) => request.id === selectedRequestId);
 
+  const context = new URLSearchParams();
+  for (const key of [
+    "category",
+    "dir",
+    "page",
+    "q",
+    "sort",
+    "status",
+  ] as const) {
+    if (searchParams[key]) context.set(key, searchParams[key]!);
+  }
+  const contextQuery = context.size ? `?${context}` : "";
   return (
     <WorkspaceLayout
       sidePanel={
         panel
           ? {
               children: panel,
-              closeHref: "/requests",
+              closeHref: `/requests${contextQuery}`,
               footer: panelFooter,
               title: "Request Details",
             }
@@ -179,7 +191,7 @@ export async function RequestsWorkspace({
                     <option value="">All statuses</option>
                     {requestStatuses.map((status) => (
                       <option key={status} value={status}>
-                        {capitalize(status)}
+                        {status === "fulfilled" ? "Issued" : capitalize(status)}
                       </option>
                     ))}
                   </select>
@@ -415,7 +427,7 @@ export async function RequestsWorkspace({
                     );
                     return (
                       <ClickableRow
-                        href={`/requests/${request.id}`}
+                        href={`/requests/${request.id}${contextQuery}`}
                         key={request.id}
                         selected={selectedRequestId === request.id}
                       >

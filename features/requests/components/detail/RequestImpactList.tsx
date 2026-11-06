@@ -14,7 +14,7 @@ export function RequestImpactList({
           <p>
             {request.status === "fulfilled"
               ? "Issued quantities and current stock position."
-              : "Current stock and fulfillment preview."}
+              : "Current stock and issuance preview."}
           </p>
         </div>
       </div>
@@ -35,7 +35,12 @@ export function RequestImpactList({
                 </span>
               </div>
               <div className="request-impact-numbers">
-                <ImpactNumber label="Current" value={item.availableQuantity} />
+                <ImpactNumber label="On hand" value={item.onHandQuantity} />
+                <ImpactNumber label="Held aside" value={item.heldQuantity} />
+                <ImpactNumber
+                  label="Available"
+                  value={item.availableQuantity}
+                />
                 <ImpactNumber
                   label={isFulfilled ? "Issued" : "Requested"}
                   value={item.requestedQuantity}
@@ -47,7 +52,7 @@ export function RequestImpactList({
                       <span className="badge badge-stock-issued">Issued</span>
                     ) : itemIsShort ? (
                       <span className="badge badge-stock-insufficient">
-                        Short
+                        Short {Math.abs(after)}
                       </span>
                     ) : (
                       after

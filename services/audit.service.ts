@@ -2,6 +2,7 @@ import { auditLogs, requestHistory } from "@/db/schema";
 import type { RequestStatus } from "@/lib/constants";
 
 export type AuditInput = {
+  id?: string;
   requestId?: string;
   itemId?: string;
   actorName: string;
@@ -22,6 +23,7 @@ export async function createAuditLog(db: AuditDb, input: AuditInput) {
   const [auditLog] = await db
     .insert(auditLogs)
     .values({
+      id: input.id,
       requestId: input.requestId,
       itemId: input.itemId,
       actorName: input.actorName,

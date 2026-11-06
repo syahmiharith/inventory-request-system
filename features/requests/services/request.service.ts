@@ -1,6 +1,10 @@
+import type { DbClient } from "@/db";
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { and, asc, desc, eq, inArray, sql, type SQLWrapper } from "drizzle-orm";
-import { db } from "@/db";
+import { getScopedDb, limitMutation } from "@/db/scoped";
 import {
+  auditLogs,
   inventoryItems,
   inventoryRequestItems,
   inventoryRequests,
@@ -134,6 +138,7 @@ async function listRequestsRaw(
       sql`(
         ${inventoryRequests.requestCode} ilike ${search}
         or ${users.name} ilike ${search}
+        or ${inventoryRequests.reason} ilike ${search}
         or exists (
           select 1
           from inventory_request_items request_item_search
@@ -165,7 +170,9 @@ async function listRequestsRaw(
     else 2
   end`;
 
-  const [totalRow] = await db
+  const [totalRow] = await (
+    await getScopedDb()
+  )
     .select({ totalCount: sql<number>`count(*)::int` })
     .from(inventoryRequests)
     .innerJoin(users, eq(inventoryRequests.requesterId, users.id))
@@ -174,7 +181,9 @@ async function listRequestsRaw(
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, pageCount);
 
-  const requests = await db
+  const requests = await (
+    await getScopedDb()
+  )
     .select({
       id: inventoryRequests.id,
       requestCode: inventoryRequests.requestCode,
@@ -303,7 +312,9 @@ async function getRequestByIdRaw(
     conditions.push(eq(inventoryRequests.requesterId, viewerId));
   }
 
-  const [request] = await db
+  const [request] = await (
+    await getScopedDb()
+  )
     .select({
       id: inventoryRequests.id,
       requestCode: inventoryRequests.requestCode,
@@ -332,9 +343,10 @@ async function getRequestByIdRaw(
 }
 
 export async function createRequest(input: unknown, actor: User) {
+  await limitMutation();
   const parsed = createRequestSchema.parse(input);
   const itemIds = parsed.items.map((item) => item.itemId);
-  const items = await db
+  const items = await (await getScopedDb())
     .select()
     .from(inventoryItems)
     .where(inArray(inventoryItems.id, itemIds));
@@ -343,12 +355,43 @@ export async function createRequest(input: unknown, actor: User) {
     throw new NotFoundError("One or more requested items were not found.");
   }
 
-  const requestCode = `REQ-${Date.now()}`;
+  const key = z.object({ key: z.string().uuid().optional() }).parse(input).key;
+  const requestCode = `REQ-${randomUUID()}`;
+  const payload = JSON.stringify(parsed);
 
-  return db.transaction(async (tx) => {
+  return (await getScopedDb()).transaction(async (tx) => {
+    if (key) {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${key}, 0))`,
+      );
+      const [existing] = await tx
+        .select()
+        .from(inventoryRequests)
+        .where(eq(inventoryRequests.id, key));
+      if (existing) {
+        const [event] = await tx
+          .select()
+          .from(auditLogs)
+          .where(
+            and(
+              eq(auditLogs.requestId, key),
+              eq(auditLogs.action, "request_created"),
+            ),
+          );
+        if (
+          existing.requesterId !== actor.id ||
+          event?.metadata.payload !== payload
+        )
+          throw new DomainError(
+            "This submission key has already been used for another request.",
+          );
+        return existing;
+      }
+    }
     const [request] = await tx
       .insert(inventoryRequests)
       .values({
+        id: key,
         requesterId: actor.id,
         requestCode,
         department: parsed.department,
@@ -377,6 +420,7 @@ export async function createRequest(input: unknown, actor: User) {
       actorRole: actor.role === "admin" ? "Admin" : "Employee",
       action: "request_created",
       toStatus: "pending",
+      metadata: { payload },
     });
 
     return request;
@@ -388,63 +432,88 @@ export async function updateRequestStatus(
   input: unknown,
   actorName: string,
 ) {
+  await limitMutation();
   const parsed = updateRequestStatusSchema.parse(input);
-  const [request] = await db
-    .select()
-    .from(inventoryRequests)
-    .where(eq(inventoryRequests.id, requestId))
-    .limit(1);
+  return (await getScopedDb()).transaction(async (transaction) => {
+    const client = transaction as unknown as DbClient;
+    const [request] = await client
+      .select()
+      .from(inventoryRequests)
+      .where(eq(inventoryRequests.id, requestId))
+      .limit(1)
+      .for("update");
 
-  if (!request) {
-    throw new NotFoundError("Request not found.");
-  }
+    if (!request) {
+      throw new NotFoundError("Request not found.");
+    }
 
-  assertValidRequestTransition(request.status, parsed.status);
+    const key = z
+      .object({ key: z.string().uuid().optional() })
+      .parse(input).key;
+    if (
+      request.status === "fulfilled" &&
+      parsed.status === "fulfilled" &&
+      key
+    ) {
+      const [event] = await client
+        .select()
+        .from(auditLogs)
+        .where(
+          and(
+            eq(auditLogs.requestId, request.id),
+            eq(auditLogs.action, "request_fulfilled"),
+          ),
+        );
+      if (event?.metadata.key === key) return request;
+    }
+    assertValidRequestTransition(request.status, parsed.status);
 
-  if (parsed.status === "approved") {
-    return approveRequest(request, parsed, actorName);
-  }
+    if (parsed.status === "approved") {
+      return approveRequest(request, parsed, actorName, client);
+    }
 
-  if (parsed.status === "fulfilled") {
-    return fulfillRequest(request, parsed, actorName);
-  }
+    if (parsed.status === "fulfilled") {
+      return fulfillRequest(request, parsed, actorName, client, key);
+    }
 
-  const [updated] = await db
-    .update(inventoryRequests)
-    .set({
-      status: "rejected",
-      approverId: parsed.approverId ?? request.approverId,
-      adminComment: parsed.adminComment ?? request.adminComment,
-      updatedAt: new Date(),
-    })
-    .where(eq(inventoryRequests.id, request.id))
-    .returning();
+    const [updated] = await client
+      .update(inventoryRequests)
+      .set({
+        status: "rejected",
+        approverId: parsed.approverId ?? request.approverId,
+        adminComment: parsed.adminComment ?? request.adminComment,
+        updatedAt: new Date(),
+      })
+      .where(eq(inventoryRequests.id, request.id))
+      .returning();
 
-  await createAuditLog(db, {
-    requestId: request.id,
-    actorName,
-    actorRole: "Admin",
-    action: "request_rejected",
-    fromStatus: request.status,
-    toStatus: "rejected",
-    note: parsed.adminComment ?? undefined,
-    metadata: { comment: parsed.adminComment ?? null },
+    await createAuditLog(client, {
+      requestId: request.id,
+      actorName,
+      actorRole: "Admin",
+      action: "request_rejected",
+      fromStatus: request.status,
+      toStatus: "rejected",
+      note: parsed.adminComment ?? undefined,
+      metadata: { comment: parsed.adminComment ?? null },
+    });
+
+    return updated;
   });
-
-  return updated;
 }
 
 async function approveRequest(
   request: InventoryRequest,
   parsed: ReturnType<typeof updateRequestStatusSchema.parse>,
   actorName: string,
+  client: DbClient,
 ) {
-  const lines = await db
+  const lines = await client
     .select()
     .from(inventoryRequestItems)
     .where(eq(inventoryRequestItems.requestId, request.id));
 
-  return db.transaction(async (tx) => {
+  return client.transaction(async (tx) => {
     for (const line of lines) {
       await tx
         .update(inventoryRequestItems)
@@ -482,13 +551,16 @@ async function fulfillRequest(
   request: InventoryRequest,
   parsed: ReturnType<typeof updateRequestStatusSchema.parse>,
   actorName: string,
+  client: DbClient,
+  key?: string,
 ) {
-  const lines = await db
-    .select()
-    .from(inventoryRequestItems)
-    .where(eq(inventoryRequestItems.requestId, request.id));
+  return client.transaction(async (tx) => {
+    const lines = await tx
+      .select()
+      .from(inventoryRequestItems)
+      .where(eq(inventoryRequestItems.requestId, request.id))
+      .orderBy(asc(inventoryRequestItems.itemId));
 
-  return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(inventoryRequests)
       .set({
@@ -506,6 +578,24 @@ async function fulfillRequest(
       .returning();
 
     if (!updated) {
+      if (key) {
+        const [event] = await tx
+          .select()
+          .from(auditLogs)
+          .where(
+            and(
+              eq(auditLogs.requestId, request.id),
+              eq(auditLogs.action, "request_fulfilled"),
+            ),
+          );
+        if (event?.metadata.key === key) {
+          const [completed] = await tx
+            .select()
+            .from(inventoryRequests)
+            .where(eq(inventoryRequests.id, request.id));
+          return completed;
+        }
+      }
       throw new DomainError("Only approved requests can be fulfilled.");
     }
 
@@ -523,13 +613,35 @@ async function fulfillRequest(
             sql`${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved} >= ${quantityToFulfill}`,
           ),
         )
-        .returning({ id: inventoryItems.id });
+        .returning({
+          id: inventoryItems.id,
+          quantityOnHand: inventoryItems.quantityOnHand,
+        });
 
       if (!stockUpdate) {
+        const [item] = await tx
+          .select()
+          .from(inventoryItems)
+          .where(eq(inventoryItems.id, line.itemId));
+        const available = item
+          ? item.quantityOnHand - item.quantityReserved
+          : 0;
         throw new DomainError(
-          "Insufficient stock. Request cannot be fulfilled.",
+          `Insufficient stock for ${item?.name ?? "item"}. Requested ${quantityToFulfill}, available ${available}, short ${Math.max(0, quantityToFulfill - available)}. The request remains approved.`,
         );
       }
+      await createAuditLog(tx, {
+        requestId: request.id,
+        itemId: line.itemId,
+        actorName,
+        actorRole: "Admin",
+        action: "stock_issued",
+        metadata: {
+          quantity: quantityToFulfill,
+          before: stockUpdate.quantityOnHand + quantityToFulfill,
+          after: stockUpdate.quantityOnHand,
+        },
+      });
     }
 
     await createAuditLog(tx, {
@@ -540,7 +652,7 @@ async function fulfillRequest(
       fromStatus: request.status,
       toStatus: "fulfilled",
       note: parsed.adminComment ?? undefined,
-      metadata: { comment: parsed.adminComment ?? null },
+      metadata: { comment: parsed.adminComment ?? null, key },
     });
 
     return updated;
@@ -564,13 +676,13 @@ async function hydrateRequest(request: {
 }) {
   const [items, history, approver] = await Promise.all([
     getRequestItems([request.id]),
-    db
+    (await getScopedDb())
       .select()
       .from(requestHistory)
       .where(eq(requestHistory.requestId, request.id))
       .orderBy(requestHistory.createdAt),
     request.approverId
-      ? db
+      ? (await getScopedDb())
           .select({ name: users.name })
           .from(users)
           .where(eq(users.id, request.approverId))
@@ -595,7 +707,7 @@ async function hydrateRequest(request: {
 }
 
 async function getRequestItems(requestIds: string[]) {
-  return db
+  return (await getScopedDb())
     .select({
       id: inventoryRequestItems.id,
       requestId: inventoryRequestItems.requestId,
@@ -603,6 +715,8 @@ async function getRequestItems(requestIds: string[]) {
       itemName: inventoryItems.name,
       itemSku: inventoryItems.sku,
       itemCategory: inventoryItems.category,
+      onHandQuantity: inventoryItems.quantityOnHand,
+      heldQuantity: inventoryItems.quantityReserved,
       availableQuantity: sql<number>`${inventoryItems.quantityOnHand} - ${inventoryItems.quantityReserved}`,
       requestedQuantity: inventoryRequestItems.quantityRequested,
       approvedQuantity: inventoryRequestItems.quantityApproved,
@@ -639,7 +753,7 @@ const listRequestCategoriesCached = (
 ) =>
   cachedRead(
     async function listRequestCategoriesCached() {
-      const rows = await db
+      const rows = await (await getScopedDb())
         .selectDistinct({ category: inventoryItems.category })
         .from(inventoryItems)
         .orderBy(asc(inventoryItems.category));

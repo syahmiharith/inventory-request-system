@@ -19,6 +19,7 @@ export async function updateRequestDetailStatusAction(formData: FormData) {
       requestId,
       {
         status,
+        approverId: actor.id,
         adminComment: adminComment || undefined,
       },
       actor.name,

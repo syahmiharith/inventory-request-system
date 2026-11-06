@@ -1,13 +1,9 @@
-import { unstable_cache } from "next/cache";
-
+// Demo data belongs to short-lived visitor sessions. Keep reads request-local so
+// reset, role changes, and expiry always consult current database state.
 export function cachedRead<T>(
   load: () => Promise<T>,
-  keyParts: string[],
-  options: { tags: string[] },
+  _keyParts: string[],
+  _options: { tags: string[] },
 ) {
-  if (process.env.NODE_ENV === "test") {
-    return load;
-  }
-
-  return unstable_cache(load, keyParts, options);
+  return load;
 }

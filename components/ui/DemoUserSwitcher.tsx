@@ -19,22 +19,36 @@ export function DemoUserSwitcher({
   initialCurrentUser: DemoUser;
 }) {
   const router = useRouter();
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
   const [currentEmail, setCurrentEmail] = useState(initialCurrentUser.email);
 
   async function handleChange(email: string) {
-    await fetch("/api/demo-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setCurrentEmail(email);
-    router.refresh();
+    setPending(true);
+    setError("");
+    try {
+      const response = await fetch("/api/demo-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) throw new Error("Unable to switch role. Please retry.");
+      setCurrentEmail(email);
+      router.refresh();
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Unable to switch role.",
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
     <label className="actions">
       <span className="muted">Viewing as</span>
       <Select
+        disabled={pending}
         value={currentEmail}
         onChange={(event) => void handleChange(event.target.value)}
       >
@@ -44,6 +58,7 @@ export function DemoUserSwitcher({
           </option>
         ))}
       </Select>
+      {error ? <span role="alert">{error}</span> : null}
     </label>
   );
 }

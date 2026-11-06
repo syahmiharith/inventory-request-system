@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { cache } from "react";
-import { db } from "@/db";
+import { getScopedDb } from "@/db/scoped";
 import {
   auditLogs,
   inventoryItems,
@@ -82,7 +82,9 @@ const getDashboardSummaryCached = cache(
       now.getTime() - 60 * 24 * 60 * 60 * 1000,
     );
 
-    const rows = await db
+    const rows = await (
+      await getScopedDb()
+    )
       .select({
         status: inventoryRequests.status,
         total: sql<number>`count(*)::int`,
@@ -218,7 +220,9 @@ const getDashboardInventoryKpisCached = cache(
     _viewerId: string,
     _viewerRole: User["role"],
   ) {
-    const rows = await db
+    const rows = await (
+      await getScopedDb()
+    )
       .select({
         totalItems: sql<number>`count(*)::int`,
         availableItems: sql<number>`count(*) filter (
@@ -252,7 +256,9 @@ const getDashboardRequestKpisCached = cache(
         ? eq(inventoryRequests.requesterId, viewerId)
         : undefined;
 
-    const rows = await db
+    const rows = await (
+      await getScopedDb()
+    )
       .select({
         totalRequests: sql<number>`count(*)::int`,
         pendingRequests: sql<number>`count(*) filter (
@@ -318,7 +324,7 @@ const getDashboardRecentRequestsCached = cache(
         ? eq(inventoryRequests.requesterId, viewerId)
         : undefined;
 
-    return db
+    return (await getScopedDb())
       .select({
         id: inventoryRequests.id,
         requestCode: inventoryRequests.requestCode,
@@ -404,7 +410,7 @@ async function getUrgentDashboardRaw(
     restockRecommendationRows,
     recentActivity,
   ] = await Promise.all([
-    db
+    (await getScopedDb())
       .select({
         pending: sql<number>`count(*) filter (where ${inventoryRequests.status} = 'pending')::int`,
         approvedWaiting: sql<number>`count(*) filter (where ${inventoryRequests.status} = 'approved')::int`,
@@ -433,7 +439,7 @@ async function getUrgentDashboardRaw(
       })
       .from(inventoryRequests)
       .where(scopeCondition),
-    db
+    (await getScopedDb())
       .select({
         id: inventoryRequests.id,
         requestCode: inventoryRequests.requestCode,
@@ -481,7 +487,7 @@ async function getUrgentDashboardRaw(
         asc(inventoryRequests.requiredBy),
       )
       .limit(5),
-    db
+    (await getScopedDb())
       .select({
         id: inventoryItems.id,
         sku: inventoryItems.sku,
@@ -521,7 +527,7 @@ async function getUrgentDashboardRaw(
         asc(inventoryItems.name),
       )
       .limit(5),
-    db
+    (await getScopedDb())
       .select({
         id: inventoryItems.id,
         sku: inventoryItems.sku,
@@ -566,7 +572,7 @@ async function getUrgentDashboardRaw(
         asc(inventoryItems.name),
       )
       .limit(5),
-    db
+    (await getScopedDb())
       .select({
         id: auditLogs.id,
         action: auditLogs.action,
@@ -619,7 +625,7 @@ async function getUrgentDashboardRaw(
 }
 
 function dashboardScope(viewer: Pick<User, "id" | "role">) {
-  return viewer.role === "admin" ? "admin" : `employee:${viewer.id}`;
+  return `${viewer.role}:${viewer.id}`;
 }
 
 function calculateTrend(current: number, previous: number) {

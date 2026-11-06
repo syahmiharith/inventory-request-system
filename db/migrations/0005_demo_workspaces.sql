@@ -1,0 +1,52 @@
+CREATE TABLE demo_workspaces (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), token_hash text UNIQUE,
+ role user_role NOT NULL DEFAULT 'employee',
+ expires_at timestamptz NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
+);
+INSERT INTO demo_workspaces (id, expires_at) VALUES ('00000000-0000-0000-0000-000000000000', 'infinity');
+CREATE TABLE demo_rate_limits (key text PRIMARY KEY, count integer NOT NULL, resets_at timestamptz NOT NULL);
+ALTER TABLE users ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX users_workspace_idx ON users(workspace_id);
+CREATE UNIQUE INDEX users_workspace_id_unique ON users(workspace_id,id);
+ALTER TABLE warehouses ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX warehouses_workspace_idx ON warehouses(workspace_id);
+CREATE UNIQUE INDEX warehouses_workspace_id_unique ON warehouses(workspace_id,id);
+ALTER TABLE suppliers ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX suppliers_workspace_idx ON suppliers(workspace_id);
+CREATE UNIQUE INDEX suppliers_workspace_id_unique ON suppliers(workspace_id,id);
+ALTER TABLE purchase_orders ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX purchase_orders_workspace_idx ON purchase_orders(workspace_id);
+CREATE UNIQUE INDEX purchase_orders_workspace_id_unique ON purchase_orders(workspace_id,id);
+ALTER TABLE inventory_items ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX inventory_items_workspace_idx ON inventory_items(workspace_id);
+CREATE UNIQUE INDEX inventory_items_workspace_id_unique ON inventory_items(workspace_id,id);
+ALTER TABLE inventory_requests ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX inventory_requests_workspace_idx ON inventory_requests(workspace_id);
+CREATE UNIQUE INDEX inventory_requests_workspace_id_unique ON inventory_requests(workspace_id,id);
+ALTER TABLE inventory_request_items ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX inventory_request_items_workspace_idx ON inventory_request_items(workspace_id);
+CREATE UNIQUE INDEX inventory_request_items_workspace_id_unique ON inventory_request_items(workspace_id,id);
+ALTER TABLE audit_logs ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX audit_logs_workspace_idx ON audit_logs(workspace_id);
+CREATE UNIQUE INDEX audit_logs_workspace_id_unique ON audit_logs(workspace_id,id);
+ALTER TABLE request_history ADD COLUMN workspace_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES demo_workspaces(id);
+CREATE INDEX request_history_workspace_idx ON request_history(workspace_id);
+CREATE UNIQUE INDEX request_history_workspace_id_unique ON request_history(workspace_id,id);
+DROP INDEX warehouses_name_unique;
+CREATE UNIQUE INDEX warehouses_name_unique ON warehouses(workspace_id,name);
+DROP INDEX suppliers_email_unique;
+CREATE UNIQUE INDEX suppliers_email_unique ON suppliers(workspace_id,email);
+DROP INDEX inventory_items_sku_unique;
+CREATE UNIQUE INDEX inventory_items_sku_unique ON inventory_items(workspace_id,sku);
+DROP INDEX inventory_requests_request_code_unique;
+CREATE UNIQUE INDEX inventory_requests_request_code_unique ON inventory_requests(workspace_id,request_code);
+ALTER TABLE purchase_orders ADD CONSTRAINT purchase_orders_supplier_id_workspace_fk FOREIGN KEY (workspace_id,supplier_id) REFERENCES suppliers(workspace_id,id);
+ALTER TABLE purchase_orders ADD CONSTRAINT purchase_orders_warehouse_id_workspace_fk FOREIGN KEY (workspace_id,warehouse_id) REFERENCES warehouses(workspace_id,id);
+ALTER TABLE purchase_orders ADD CONSTRAINT purchase_orders_created_by_id_workspace_fk FOREIGN KEY (workspace_id,created_by_id) REFERENCES users(workspace_id,id);
+ALTER TABLE inventory_requests ADD CONSTRAINT inventory_requests_requester_id_workspace_fk FOREIGN KEY (workspace_id,requester_id) REFERENCES users(workspace_id,id);
+ALTER TABLE inventory_requests ADD CONSTRAINT inventory_requests_approver_id_workspace_fk FOREIGN KEY (workspace_id,approver_id) REFERENCES users(workspace_id,id);
+ALTER TABLE inventory_request_items ADD CONSTRAINT inventory_request_items_request_id_workspace_fk FOREIGN KEY (workspace_id,request_id) REFERENCES inventory_requests(workspace_id,id);
+ALTER TABLE inventory_request_items ADD CONSTRAINT inventory_request_items_item_id_workspace_fk FOREIGN KEY (workspace_id,item_id) REFERENCES inventory_items(workspace_id,id);
+ALTER TABLE audit_logs ADD CONSTRAINT audit_logs_request_id_workspace_fk FOREIGN KEY (workspace_id,request_id) REFERENCES inventory_requests(workspace_id,id);
+ALTER TABLE audit_logs ADD CONSTRAINT audit_logs_item_id_workspace_fk FOREIGN KEY (workspace_id,item_id) REFERENCES inventory_items(workspace_id,id);
+ALTER TABLE request_history ADD CONSTRAINT request_history_request_id_workspace_fk FOREIGN KEY (workspace_id,request_id) REFERENCES inventory_requests(workspace_id,id);

@@ -1,3 +1,4 @@
+import { DemoWorkspaceControls } from "../ui/DemoWorkspaceControls";
 import type { ReactNode } from "react";
 import type { User } from "@/db/schema";
 import { AppHeader } from "./AppHeader";
@@ -17,6 +18,7 @@ export function AppShell({
       <AppSidebar currentUser={currentUser} />
       <div className="center-region" data-testid="center-region">
         <AppHeader currentUser={currentUser} demoUsers={demoUsers} />
+        <DemoWorkspaceControls />
         <div className="content-region">{children}</div>
       </div>
     </div>

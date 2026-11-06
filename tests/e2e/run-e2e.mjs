@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3100";
+const port = process.env.PLAYWRIGHT_PORT ?? "3100";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
 const isWindows = process.platform === "win32";
 const nextCommand = isWindows
   ? "node_modules\\.bin\\next.cmd"
@@ -11,7 +12,8 @@ try {
   if (!process.env.PLAYWRIGHT_BASE_URL) {
     run("npm", ["run", "db:migrate"]);
     run("npm", ["run", "db:seed"]);
-    server = spawn(nextCommand, ["dev", "-p", "3100"], {
+    run("npm", ["run", "build"]);
+    server = spawn(nextCommand, ["start", "-p", port], {
       shell: isWindows,
       stdio: "inherit",
     });
@@ -50,9 +52,11 @@ async function waitForServer(url) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < 120_000) {
     try {
-      const response = await fetch(url);
+      const response = await fetch(new URL("/api/health", url), {
+        redirect: "manual",
+      });
       await response.arrayBuffer();
-      if (response.ok || response.status < 500) {
+      if (response.ok) {
         return;
       }
     } catch {

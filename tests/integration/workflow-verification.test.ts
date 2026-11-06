@@ -159,6 +159,7 @@ describe("inventory workflow verification", () => {
     expect(history.map((entry) => entry.action)).toEqual([
       "request_created",
       "request_approved",
+      "stock_issued",
       "request_fulfilled",
     ]);
   });

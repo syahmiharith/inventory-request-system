@@ -59,7 +59,7 @@ export function getNextActionSummary(
     return "Review request";
   }
   if (status === "approved") {
-    return readiness.tone === "ready" ? "Fulfill request" : "Resolve stock";
+    return readiness.tone === "ready" ? "Issue request" : "Resolve stock";
   }
   if (status === "fulfilled") {
     return "Complete";

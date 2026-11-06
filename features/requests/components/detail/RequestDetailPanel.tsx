@@ -1,9 +1,13 @@
+import { ReviewAsAdminButton } from "../ReviewAsAdminButton";
+import { StockReceiptForm } from "../StockReceiptForm";
+import { randomUUID } from "node:crypto";
 import { RequestDetailHero } from "./RequestDetailHero";
 import { RequestHistoryTimeline } from "./RequestHistoryTimeline";
 import { RequestImpactList } from "./RequestImpactList";
 import type { RequestDetail } from "./types";
 
 export function RequestDetailPanel({
+  isAdmin,
   query,
   request,
 }: {
@@ -19,7 +23,7 @@ export function RequestDetailPanel({
   return (
     <div className="request-detail-sheet" data-testid="request-detail-panel">
       {query?.success ? (
-        <p aria-live="polite" className="alert alert-success">
+        <p role="status" aria-live="polite" className="alert alert-success">
           {query.success}
         </p>
       ) : null}
@@ -37,7 +41,28 @@ export function RequestDetailPanel({
         <p title={request.reason}>{request.reason}</p>
       </section>
 
+      {request.status === "approved" ? (
+        <p>
+          Approval leaves stock available to other requests. Stock is deducted
+          when items are issued.
+        </p>
+      ) : null}
+      {!isAdmin ? <ReviewAsAdminButton requestId={request.id} /> : null}
       <RequestImpactList request={request} />
+      {isAdmin && request.status === "approved" ? (
+        <section className="detail-section">
+          <h3>Record stock received</h3>
+          <p>
+            Record a delivery, then review availability before issuing this
+            request.
+          </p>
+          <StockReceiptForm
+            requestId={request.id}
+            receiptKey={randomUUID()}
+            items={request.items}
+          />
+        </section>
+      ) : null}
       <RequestHistoryTimeline request={request} />
     </div>
   );

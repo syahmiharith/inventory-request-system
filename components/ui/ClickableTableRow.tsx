@@ -1,7 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 
 const interactiveSelector =
   'a, button, input, select, textarea, form, [role="button"], [data-row-action]';
@@ -18,6 +24,18 @@ export function ClickableTableRow({
   selected?: boolean;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (
+      sessionStorage.getItem("restore-row-focus") === "1" &&
+      sessionStorage.getItem("selected-row-href") === href &&
+      !pathname.match(/\/[a-f0-9-]{36}$/)
+    ) {
+      rowRef.current?.focus();
+      sessionStorage.removeItem("restore-row-focus");
+    }
+  }, [href, pathname]);
 
   function shouldIgnoreNavigation(target: EventTarget | null) {
     return (
@@ -26,6 +44,7 @@ export function ClickableTableRow({
   }
 
   function navigate() {
+    sessionStorage.setItem("selected-row-href", href);
     router.push(href);
   }
 
@@ -48,6 +67,7 @@ export function ClickableTableRow({
 
   return (
     <tr
+      ref={rowRef}
       aria-current={selected ? "true" : undefined}
       className={`clickable-row ${selected ? "selected" : ""} ${className ?? ""}`.trim()}
       onClick={handleClick}
