@@ -4,11 +4,19 @@ Visitors receive a private workspace with an opaque HttpOnly cookie. The server 
 
 The database API retains `fulfilled` as its terminal status. Screens call this Issued. Optional UUID `key` fields on request creation and issuance support safe retries. Reuse the key and identical payload after an uncertain response. Stock receipts always require a key. Mutations are bounded to 120 per minute per workspace. Creation is bounded to 30 per hour per source address and 300 globally.
 
+## Shared-project preview
+
+The free hosted preview uses the `inventory_demo` schema inside the existing `inventory-request-module` Supabase project. Its `inventory_demo_runtime` login owns the private demo objects, has `search_path=inventory_demo`, and cannot read the existing public request table. The connection is stored in the branch-specific Vercel Preview `DATABASE_URL` secret. The public application's connection remains a separate deployment setting.
+
+Supabase migration `bootstrap_private_inventory_demo` created this schema by applying the repository migration chain with every explicit public-schema reference replaced by the private schema name. The original public tables were outside that migration boundary. Keep this schema outside the Data API's exposed schemas. For future hosted changes, review and apply private-schema-qualified migrations. The standard public migration chain is for standalone databases and must not be run against this shared-project deployment.
+
+Supabase separately flags RLS disabled on the existing public tables. Their Data API access policies require a separate review before enabling RLS or changing existing client access.
+
 ## Before release
 
 - Run `npm ci`, type checking, lint, unit/component tests, real PostgreSQL integration tests, browser tests, and the production build.
-- Apply migrations 0005 and 0006 manually with a database backup available. Inspect workspace counts and legacy record counts after migration. Build commands never apply migrations.
-- Configure `CRON_SECRET` in Vercel. The scheduled cleanup calls `/api/demo/cleanup` daily and deletes up to 100 expired workspaces per call. Expired sessions are rejected immediately, independently of cleanup timing. Retry cleanup if a batch fails and monitor backlog.
+- For a standalone database, apply migrations 0005 and 0006 manually with a database backup available. For the shared-project preview, follow the private-schema migration procedure above. Inspect workspace counts and legacy record counts after migration. Build commands never apply migrations.
+- Configure `CRON_SECRET` in Vercel. Vercel Cron runs on production deployments. Call the authenticated cleanup endpoint manually during preview testing. The scheduled production cleanup calls `/api/demo/cleanup` daily and deletes up to 100 expired workspaces per call. Expired sessions are rejected immediately, independently of cleanup timing. Retry cleanup if a batch fails and monitor backlog.
 - Configure an uptime monitor against `/api/health`. A database outage returns 503. Inspect Vercel runtime errors for failed operations. Verify alerts by an intentional failure in a disposable deployment.
 - Verify backup restoration into a separate database. Compare request, stock, movement, history, and workspace ownership records. Record the provider backup timestamp and restored counts. A local logical dump check alone does not verify hosted backups.
 - Open two fresh browser contexts on the deployed URL. Complete the three scenarios, attempt cross-workspace IDs, reset one workspace, and verify the other remains usable. Verify keyboard focus and narrow layouts.
