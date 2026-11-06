@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
     await rateLimit(`create:${hashToken(ip)}`, 30, 3600);
-    await rateLimit("create:global", 300, 3600);
+    await rateLimit("create:global:daily", 100, 86400);
     const { token } = await createWorkspace();
     const response = new NextResponse(null, {
       status: 303,

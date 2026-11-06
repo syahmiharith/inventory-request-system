@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   auditLogs,
@@ -264,22 +264,52 @@ export async function createWorkspace() {
 
 export async function deleteWorkspace(id: string) {
   await db.transaction(async (tx) => {
-    // Children first so every foreign key remains valid throughout cleanup.
-    for (const table of [
-      "request_history",
-      "audit_logs",
-      "inventory_request_items",
-      "inventory_requests",
-      "purchase_orders",
-      "inventory_items",
-      "suppliers",
-      "warehouses",
-      "users",
-    ]) {
-      await tx.execute(
-        sql`delete from ${sql.identifier(table)} where workspace_id = ${id}::uuid`,
-      );
-    }
-    await tx.delete(demoWorkspaces).where(eq(demoWorkspaces.id, id));
+    await deleteWorkspaceRows(tx, [id]);
   });
+}
+
+export async function cleanupExpiredWorkspaces() {
+  return db.transaction(async (tx) => {
+    // A bounded bulk delete catches up faster than the 100/day creation limit.
+    // Locks make overlapping cron/manual runs safe without touching live sessions.
+    const expired = await tx
+      .select({ id: demoWorkspaces.id })
+      .from(demoWorkspaces)
+      .where(lt(demoWorkspaces.expiresAt, new Date()))
+      .orderBy(demoWorkspaces.expiresAt)
+      .limit(200)
+      .for("update", { skipLocked: true });
+    if (expired.length)
+      await deleteWorkspaceRows(
+        tx,
+        expired.map((row) => row.id),
+      );
+    await tx.execute(sql`delete from demo_rate_limits where resets_at < now()`);
+    return expired.length;
+  });
+}
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function deleteWorkspaceRows(tx: Transaction, ids: string[]) {
+  // Children first so every foreign key remains valid throughout cleanup.
+  for (const table of [
+    "request_history",
+    "audit_logs",
+    "inventory_request_items",
+    "inventory_requests",
+    "purchase_orders",
+    "inventory_items",
+    "suppliers",
+    "warehouses",
+    "users",
+  ]) {
+    await tx.execute(
+      sql`delete from ${sql.identifier(table)} where workspace_id in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})`,
+    );
+  }
+  await tx.delete(demoWorkspaces).where(inArray(demoWorkspaces.id, ids));
 }
