@@ -11,4 +11,6 @@ test-results
 tsconfig.tsbuildinfo
 
 .vercel
+backups
+.vitest
 inventory-request-system

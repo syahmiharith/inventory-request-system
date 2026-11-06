@@ -42,5 +42,7 @@ jobs:
       - run: npm run test:unit
       - run: npm run test:component
       - run: npm run test:integration
+      - run: node --test tests/operations/*.test.mjs
+      - run: npm audit --audit-level=moderate
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

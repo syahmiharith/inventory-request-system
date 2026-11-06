@@ -1,0 +1,38 @@
+name: Encrypted demo backup and restore
+
+on:
+  schedule:
+    - cron: "35 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Export hosted schema and verify disposable restore
+        run: node scripts/demo-backup.mjs
+        env:
+          DEMO_DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+          DEMO_BACKUP_KEY: ${{ secrets.DEMO_BACKUP_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-demo-backup-${{ github.run_id }}
+          path: backups/*.enc
+          retention-days: 7
+          if-no-files-found: error
