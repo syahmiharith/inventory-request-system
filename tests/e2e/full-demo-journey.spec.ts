@@ -139,6 +139,17 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Issue", exact: true }).click();
   await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Request issued successfully." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Stock received. Review availability and issue the request.",
+      { exact: true },
+    ),
+  ).toHaveCount(0);
   await expect(page.getByText("Stock Received", { exact: true })).toHaveCount(
     1,
   );
