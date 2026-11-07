@@ -12,6 +12,7 @@ tsconfig.tsbuildinfo
 
 .vercel
 backups
+cleanup-receipts
 .vitest
 supabase/.temp
 inventory-request-system

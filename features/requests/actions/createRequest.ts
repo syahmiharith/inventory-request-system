@@ -1,22 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidateRequestReads } from "@/lib/cache-tags";
 import { createRequest } from "@/features/requests/services/request.service";
+import { DomainError } from "@/lib/errors";
 
 export type CreateRequestState = {
   errors?: Record<string, string>;
   message?: string;
+  requestId?: string;
 };
 
 export async function createInventoryRequestAction(
   _previousState: CreateRequestState,
   formData: FormData,
 ): Promise<CreateRequestState> {
-  const actor = await getCurrentUser();
   const requesterName = String(formData.get("requesterName") ?? "").trim();
 
   if (!requesterName) {
@@ -25,6 +25,7 @@ export async function createInventoryRequestAction(
 
   let createdId = "";
   try {
+    const actor = await getCurrentUser();
     const itemIds = formData.getAll("itemId");
     const quantities = formData.getAll("quantityRequested");
     const requestItems = itemIds
@@ -68,6 +69,9 @@ export async function createInventoryRequestAction(
     );
     createdId = request.id;
     revalidateRequestReads(request.id);
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    revalidatePath("/requests");
   } catch (error) {
     if (error instanceof ZodError) {
       return {
@@ -80,16 +84,14 @@ export async function createInventoryRequestAction(
       };
     }
 
+    if (error instanceof DomainError) return { message: error.message };
+    console.error("Unable to confirm inventory request creation");
     return {
       message:
-        error instanceof Error ? error.message : "Unable to create request.",
+        "Unable to confirm your request. Your values are kept. Please try again.",
     };
   }
-
-  revalidatePath("/");
-  revalidatePath("/dashboard");
-  revalidatePath("/requests");
-  redirect(`/requests/${createdId}?success=Request+created+successfully.`);
+  return { requestId: createdId };
 }
 
 function numberFromForm(value: FormDataEntryValue | null) {

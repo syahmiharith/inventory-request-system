@@ -1,5 +1,63 @@
 /* Dashboard cards, queues, quick actions, and risk sections. */
 
+.demo-journey {
+  display: grid;
+  gap: 14px;
+}
+
+.demo-journey .actions,
+.demo-scenarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.demo-journey p,
+.demo-recent-requests > p {
+  margin: 0;
+}
+
+.demo-guidance,
+.demo-recent-requests > p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.demo-recent-requests > h3 {
+  margin: 0 0 6px;
+}
+
+.demo-request-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.demo-request-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.demo-request-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+}
+
+.demo-request-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.demo-request-copy > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .dashboard-page {
   display: flex;
   height: 100%;

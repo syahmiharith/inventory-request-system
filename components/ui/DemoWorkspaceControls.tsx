@@ -16,16 +16,20 @@ export function DemoWorkspaceControls() {
     }
   }
   return (
-    <div className="actions">
+    <section className="demo-workspace-bar" aria-label="Demo workspace">
       <span>Demo workspace · 24-hour session</span>
       <button
-        className="button button-secondary"
+        className="button button-secondary button-compact"
         disabled={pending}
         onClick={reset}
       >
         {pending ? "Resetting…" : "Reset my demo"}
       </button>
-      {error ? <p role="alert">{error}</p> : null}
-    </div>
+      {error ? (
+        <p className="form-message error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }

@@ -56,19 +56,27 @@ export function StockReceiptForm({
     <form onSubmit={submit}>
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="key" value={key} />
-      <fieldset disabled={pending} className="form-grid">
-        <legend>Delivery details</legend>
-        <label htmlFor={`receipt-item-${requestId}`}>Item</label>
-        <select id={`receipt-item-${requestId}`} name="itemId" required>
-          {items.map((item) => (
-            <option key={item.itemId} value={item.itemId}>
-              {item.itemName}
-            </option>
-          ))}
-        </select>
-        <label>
+      <fieldset disabled={pending} className="form-grid receipt-fields">
+        <legend className="sr-only">Delivery details</legend>
+        <div className="field">
+          <label htmlFor={`receipt-item-${requestId}`}>Item</label>
+          <select
+            className="input"
+            id={`receipt-item-${requestId}`}
+            name="itemId"
+            required
+          >
+            {items.map((item) => (
+              <option key={item.itemId} value={item.itemId}>
+                {item.itemName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="field">
           Quantity received
           <input
+            className="input"
             name="quantity"
             type="number"
             min="1"
@@ -77,16 +85,21 @@ export function StockReceiptForm({
             required
           />
         </label>
-        <label>
+        <label className="field">
           Delivery reference or reason
-          <input name="reason" maxLength={500} required />
+          <input className="input" name="reason" maxLength={500} required />
         </label>
-        <button type="submit" className="button">
+        <button type="submit" className="button button-primary">
           {pending ? "Recording delivery…" : "Record stock received"}
         </button>
       </fieldset>
       {result ? (
-        <p role={result.ok ? "status" : "alert"}>{result.message}</p>
+        <p
+          className={`alert ${result.ok ? "alert-success" : "alert-error"}`}
+          role={result.ok ? "status" : "alert"}
+        >
+          {result.message}
+        </p>
       ) : null}
     </form>
   );

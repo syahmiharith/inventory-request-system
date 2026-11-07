@@ -1,0 +1,40 @@
+name: Demo expired workspace cleanup
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Test cleanup failure notification without changing the production credential"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Delete expired visitor data
+        run: node scripts/demo-cleanup.mjs
+        env:
+          DEMO_CLEANUP_SECRET: ${{ inputs.simulate_failure && 'invalid-cleanup-notification-test' || secrets.DEMO_CLEANUP_SECRET }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-receipt-${{ github.run_id }}
+          path: cleanup-receipts/cleanup.json
+          retention-days: 7
+          if-no-files-found: error

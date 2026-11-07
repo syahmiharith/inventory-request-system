@@ -42,7 +42,7 @@ export function RequestDetailPanel({
       </section>
 
       {request.status === "approved" ? (
-        <p>
+        <p className="alert alert-info">
           Approval leaves stock available to other requests. Stock is deducted
           when items are issued.
         </p>
@@ -51,11 +51,15 @@ export function RequestDetailPanel({
       <RequestImpactList request={request} />
       {isAdmin && request.status === "approved" ? (
         <section className="detail-section">
-          <h3>Record stock received</h3>
-          <p>
-            Record a delivery, then review availability before issuing this
-            request.
-          </p>
+          <div className="detail-section-header">
+            <div>
+              <h3>Record stock received</h3>
+              <p>
+                Record a delivery, then review availability before issuing this
+                request.
+              </p>
+            </div>
+          </div>
           <StockReceiptForm
             requestId={request.id}
             receiptKey={randomUUID()}
