@@ -41,11 +41,30 @@ function docker(args, options = {}) {
     ...options,
   });
   // Docker/Postgres diagnostics can contain connection details. Keep them private.
-  if (result.status !== 0)
+  if (result.status !== 0) {
+    const operation =
+      args.find((arg) => ["pg_dump", "pg_restore", "psql"].includes(arg)) ??
+      args[0];
     throw new Error(
-      `Backup command failed (${args[0]}), exit ${result.status}`,
+      `Backup command failed (${operation}), exit ${result.status}`,
     );
+  }
   return result.stdout;
+}
+
+export async function waitForRestore(name) {
+  for (let i = 0; i < 60; i++) {
+    // The entrypoint's temporary init server only listens on a Unix socket.
+    // TCP readiness guarantees initialization has finished and the final server is up.
+    const check = spawnSync(
+      "docker",
+      ["exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "postgres"],
+      { timeout: 5000 },
+    );
+    if (check.status === 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error("Disposable restore database did not start");
 }
 
 async function verify(dump, expected, temp) {
@@ -70,20 +89,7 @@ async function verify(dump, expected, temp) {
   );
   let restored;
   try {
-    let ready = false;
-    for (let i = 0; i < 60; i++) {
-      const check = spawnSync(
-        "docker",
-        ["exec", name, "pg_isready", "-U", "postgres"],
-        { timeout: 5000 },
-      );
-      if (check.status === 0) {
-        ready = true;
-        break;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-    if (!ready) throw new Error("Disposable restore database did not start");
+    await waitForRestore(name);
     docker([
       "exec",
       name,
