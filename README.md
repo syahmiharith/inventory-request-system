@@ -9,6 +9,30 @@ fulfilled only when stock is available. The implementation emphasizes
 server-side correctness, transaction-safe stock mutation, clear role separation,
 and reviewer-verifiable workflows.
 
+## Try the public demo
+
+[Open Inventory Request System](https://inventory-request-system-syahmiharith.vercel.app).
+Each visitor receives a separate workspace with employee and administrator demo
+identities. Sessions expire after 24 hours. **Reset my demo** starts fresh data.
+
+1. Choose **Request supplies** and request three reams of paper and three boxes
+   of pens.
+2. Submit a purpose, then choose **Review this request as demo admin**.
+3. Approve the request. Stock stays unchanged; the pens are short by two boxes.
+4. Record two boxes received with a delivery reference, then issue the request.
+5. Check the timeline and stock movements: pens finish at zero and paper at nine.
+
+The dashboard also opens ordinary fulfillment and competing-request scenarios.
+Approval accepts a request without reserving stock. Stock is deducted when the
+request is **Issued**, and receipts add stock. The API stores Issued as
+`fulfilled` for compatibility.
+
+See the [release and isolation guide](docs/demo-release.md) and
+[free-tier operations](docs/demo-operations.md) for access boundaries, hourly
+cleanup receipts, failure alerts, encrypted backups, and restoration. These are
+verified demonstration workflows; observed use by an inventory operator and
+unfamiliar visitors remains a separate evidence gate.
+
 ## Project Context
 
 Originally developed as a technical exercise, this is a portfolio demonstration,
@@ -30,8 +54,8 @@ This project demonstrates an end-to-end inventory request system with:
 - unit, component, integration, and E2E test coverage
 
 The scope is intentionally focused. Production authentication, procurement,
-notifications, and supplier workflows are documented as future hardening areas
-rather than simulated as incomplete features.
+customer request notifications, and supplier workflows remain outside the demo.
+Operational health and cleanup failure notifications use GitHub Actions.
 
 ## Baseline Scope
 
@@ -44,7 +68,7 @@ It intentionally keeps these boundaries:
 - Demo roles are limited to `employee` and `admin`.
 - Supabase is used as hosted PostgreSQL.
 - Drizzle ORM remains the application data access layer.
-- Stock is mutated only during fulfillment.
+- Issuance deducts stock; recording a delivery adds stock.
 - Migrations and seeding are manual operational steps, not automatic Vercel
   build steps.
 
@@ -72,7 +96,8 @@ Admins can:
 3. approve pending requests
 4. reject pending requests
 5. fulfill approved requests when stock is sufficient
-6. view inventory and request history
+6. record stock received with a reference or reason
+7. view inventory and request history
 
 ## Business Rules
 
@@ -84,7 +109,7 @@ The request lifecycle is enforced server-side.
 | Approval            | Approval does not deduct or reserve stock                  |
 | Rejection           | Rejection does not deduct stock                            |
 | Fulfillment         | Only `approved` requests can be fulfilled                  |
-| Stock mutation      | Stock is deducted only during fulfillment                  |
+| Stock mutation      | Issuance deducts stock; receipts add stock                 |
 | Insufficient stock  | Fulfillment fails and leaves request/inventory unchanged   |
 | Terminal statuses   | `fulfilled` and `rejected` requests are terminal           |
 | History             | Request creation and status changes append request history |
@@ -474,8 +499,10 @@ The test suite covers the primary correctness and workflow requirements:
 
 ### Testing Notes
 
-- E2E tests use seeded demo data.
-- E2E tests are intentionally serial because they mutate shared demo records.
+- E2E tests create isolated visitor workspaces with relative seed dates.
+- Each scenario owns its workspace; independent sessions exercise isolation,
+  role switching, direct identifiers, and reset.
+- Browser checks cover failed submissions and lost creation/receipt responses.
 - Load testing is not included because the project scope focuses on workflow
   correctness and reviewer-verifiable behavior.
 
@@ -550,20 +577,21 @@ Project Settings and never committed.
 The current implementation uses a demo role switcher and is not a production
 authentication system.
 
-For production use, add:
+The public demo already has opaque server-validated sessions, workspace-scoped
+roles and data, RLS protection against direct browser access, creation and
+mutation limits, hourly cleanup monitoring, failure alerts, and verified
+encrypted backup restoration. See [operations](docs/demo-operations.md).
 
-- real authentication and session management
-- role-based authorization tied to authenticated identity
-- Supabase Row Level Security policies, if using Supabase client access
-- audit retention policy
-- operational monitoring and alerting
-- error tracking
-- mutation rate limiting
-- deployment migration controls
-- backup and restore procedures
+An organizational deployment still needs real authentication, authorization tied
+to employee identity, an appropriate audit retention policy, error tracking,
+and organization-specific release and recovery controls. The visitor demo's
+24-hour lifetime and freely switchable roles are intentional demonstration
+boundaries.
 
-Do not enable Supabase Row Level Security without policies. Enabling RLS
-without policies can block expected data access.
+Keep the private schema outside the Supabase Data API. Public legacy tables use
+RLS with browser grants revoked as an intentional default-deny boundary. If
+client access is introduced, define explicit grants and authorization policies
+for the intended users.
 
 ## Design Decisions
 
@@ -575,9 +603,10 @@ operations workflows where approval and physical issuance are separate steps.
 
 ### Why fulfillment is transactional
 
-Fulfillment is the only workflow step that mutates inventory. The transaction
-ensures that stock checks and stock deduction happen atomically, preventing
-partial updates and negative stock.
+Issuance checks all request lines and deducts stock in one transaction,
+preventing partial updates and negative stock. Receipts use a separate
+transaction to add stock and write linked history. Creation, receipts, and
+issuance support safe retries with idempotency keys.
 
 ### Why authentication is simulated
 
@@ -599,18 +628,18 @@ migration layer.
 - The request form requester field is read-only to match server-side scoping.
 - Inventory requests support one or more item lines.
 - Approval quantity equals requested quantity.
-- Email notifications, real authentication, procurement, supplier workflows,
+- Customer request emails, real authentication, procurement, supplier workflows,
   and multi-level approvals are out of scope.
 
 ## Known Limitations
 
 - Authentication is simulated with seeded demo users and a cookie.
 - Supabase Auth is not implemented.
-- Notification workflows are not implemented.
+- Customer request emails are not implemented; operational failure alerts are verified.
 - Procurement and supplier workflows are not part of the demo UI.
 - Load testing is not included.
-- Production use requires additional identity, authorization, monitoring, and
-  operational controls.
+- Organizational use requires additional identity, authorization, retention, and
+  operational controls. GitHub schedules can be delayed; they are not a scheduling SLA.
 
 ## AI Usage
 
