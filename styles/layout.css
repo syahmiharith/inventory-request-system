@@ -243,6 +243,34 @@
   padding: 24px;
 }
 
+.demo-workspace-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 8px 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.demo-workspace-bar .form-message {
+  margin: 0;
+  flex-basis: 100%;
+}
+
+.demo-unavailable {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.demo-unavailable > .card {
+  width: min(100%, 560px);
+  padding: 24px;
+}
+
 .page-scroll {
   height: 100%;
   overflow-y: auto;
@@ -273,6 +301,7 @@
 }
 
 .app-header {
+  flex-shrink: 0;
   min-height: 64px;
   display: flex;
   align-items: center;
@@ -281,6 +310,10 @@
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   padding: 0 20px;
+}
+
+.mobile-navigation {
+  display: none;
 }
 
 .header-title,

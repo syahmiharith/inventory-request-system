@@ -37,26 +37,43 @@ export default async function HomePage() {
         }
         description="Request supplies, review decisions, and verify stock movements."
       />
-      <section className="panel">
+      <section className="card demo-journey" aria-label="Demo walkthrough">
         <div className="actions">
-          <Link className="button" href="/requests/new">
+          <Link className="button button-primary" href="/requests/new">
             Request supplies
           </Link>
           <ReviewAsAdminButton />
         </div>
-        <p>Each scenario belongs to your private demo workspace.</p>
-        <div className="actions">
-          <Link href="/requests?q=REQ-DEMO-1">Ordinary fulfillment</Link>
-          <Link href="/requests?q=REQ-DEMO-2">Shortage recovery</Link>
-          <Link href="/requests?q=Competing">Competing requests</Link>
-        </div>
-        <p>
-          For shortage recovery, review the request as admin, approve it, record
-          two boxes of pens received, then issue all items and inspect history.
+        <p className="muted">
+          Explore a scenario in your private demo workspace.
         </p>
-        <p>
-          Safety gloves include two boxes held aside for a separate safety
-          exercise. Approval leaves stock available to other requests.
+        <nav className="demo-scenarios" aria-label="Demo scenarios">
+          <Link
+            className="button button-secondary button-compact"
+            href="/requests?q=REQ-DEMO-1"
+          >
+            Ordinary fulfillment
+          </Link>
+          <Link
+            className="button button-secondary button-compact"
+            href="/requests?q=REQ-DEMO-2"
+          >
+            Shortage recovery
+          </Link>
+          <Link
+            className="button button-secondary button-compact"
+            href="/requests?q=Competing"
+          >
+            Competing requests
+          </Link>
+        </nav>
+        <p className="demo-guidance">
+          Try shortage recovery: approve the request, record two boxes of pens
+          received, then issue the supplies and check their history.
+        </p>
+        <p className="demo-guidance">
+          Stock changes when supplies are issued. Safety gloves show a separate
+          example with two boxes held aside.
         </p>
       </section>
       <KpiGrid>
@@ -64,6 +81,7 @@ export default async function HomePage() {
           <KpiCard
             icon={<Package aria-hidden="true" />}
             key={status}
+            tone={(["amber", "blue", "green", "red"] as const)[index]}
             label={labels[index]}
             value={counts[index].totalCount}
             note={notes[index]}
@@ -90,21 +108,26 @@ export default async function HomePage() {
           footerLabel="Review low stock"
         />
       </KpiGrid>
-      <section className="panel">
+      <section className="card demo-recent-requests">
         <h3>Recent requests</h3>
         <p>
           Open a request to inspect its items, decision, stock availability, and
           history.
         </p>
         {requests.rows.length ? (
-          <ul>
+          <ul className="demo-request-list">
             {requests.rows.map((request) => (
               <li key={request.id}>
-                <Link href={`/requests/${request.id}`}>
-                  {request.requestCode}
-                </Link>{" "}
-                <StatusBadge status={request.status} />{" "}
-                <span>{request.reason}</span>
+                <Link
+                  className="demo-request-link"
+                  href={`/requests/${request.id}`}
+                >
+                  <span className="demo-request-copy">
+                    <strong>{request.requestCode}</strong>
+                    <span>{request.reason}</span>
+                  </span>
+                  <StatusBadge status={request.status} />
+                </Link>
               </li>
             ))}
           </ul>

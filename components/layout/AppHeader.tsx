@@ -2,6 +2,8 @@
 
 import type { User } from "@/db/schema";
 import { DemoUserSwitcher } from "@/components/ui/DemoUserSwitcher";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function AppHeader({
   currentUser,
@@ -10,6 +12,7 @@ export function AppHeader({
   currentUser: User;
   demoUsers: User[];
 }) {
+  const pathname = usePathname();
   return (
     <header className="app-header" data-testid="app-header">
       <div className="header-title">
@@ -29,6 +32,29 @@ export function AppHeader({
           <span>{currentUser.role === "admin" ? "Admin" : "Employee"}</span>
         </div>
       </div>
+      <nav className="mobile-navigation" aria-label="Primary navigation">
+        {[
+          { href: "/", label: "Dashboard" },
+          { href: "/inventory", label: "Inventory" },
+          { href: "/requests", label: "Requests" },
+        ].map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={
+              (
+                href === "/"
+                  ? pathname === "/" || pathname === "/dashboard"
+                  : pathname.startsWith(href)
+              )
+                ? "page"
+                : undefined
+            }
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }

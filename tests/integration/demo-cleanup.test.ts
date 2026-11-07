@@ -3,10 +3,19 @@ import { it, expect } from "vitest";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { demoWorkspaces, inventoryItems } from "@/db/schema";
-import { createWorkspace, deleteWorkspace } from "@/lib/demo-session";
+import {
+  createWorkspace,
+  deleteWorkspace,
+  cleanupExpiredWorkspaces,
+} from "@/lib/demo-session";
 import { GET } from "@/app/api/demo/cleanup/route";
 
 it("authorizes cleanup, bounds each batch, removes children and preserves live sessions on replay", async () => {
+  // A reused disposable test database can retain expired browser fixtures.
+  // Drain those before asserting this test's exact batch sizes.
+  while ((await cleanupExpiredWorkspaces()) > 0) {
+    /* bounded batches */
+  }
   const active = await createWorkspace();
   const expired = await createWorkspace();
   const placeholders = Array.from({ length: 200 }, () => ({

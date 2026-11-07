@@ -20,6 +20,25 @@ type RequestableItem = {
 const initialState: CreateRequestState = {};
 const itemPageSize = 25;
 
+async function submitRequest(
+  previous: CreateRequestState,
+  formData: FormData,
+): Promise<CreateRequestState> {
+  try {
+    const result = await createInventoryRequestAction(previous, formData);
+    if (result.requestId)
+      window.location.assign(
+        `/requests/${result.requestId}?success=Request+created+successfully.`,
+      );
+    return result;
+  } catch {
+    return {
+      message:
+        "Unable to confirm your request. Your values are kept. Please try again.",
+    };
+  }
+}
+
 export function RequestForm({
   initialItemId,
   onClose,
@@ -55,9 +74,10 @@ export function RequestForm({
     totalCount: 0,
   });
   const [state, formAction, pending] = useActionState(
-    createInventoryRequestAction,
+    submitRequest,
     initialState,
   );
+
   const selectedIds = lines.map((line) => line.itemId).filter(Boolean);
   const hasDuplicateLines = selectedIds.some(
     (id, index) => selectedIds.indexOf(id) !== index,
@@ -231,7 +251,7 @@ export function RequestForm({
         onChange={() => setDirty(true)}
       >
         {state.message ? (
-          <p aria-live="polite" className="form-message error">
+          <p role="alert" aria-live="polite" className="form-message error">
             {state.message}
           </p>
         ) : null}
@@ -269,8 +289,12 @@ export function RequestForm({
             <FieldError message={state.errors?.requiredBy} />
           </label>
           <label className="field">
-            <span>Reason</span>
+            <span id="request-reason-label">Reason</span>
             <textarea
+              aria-labelledby="request-reason-label"
+              aria-describedby={
+                state.errors?.reason ? "request-reason-error" : undefined
+              }
               aria-invalid={Boolean(state.errors?.reason)}
               className="input textarea"
               name="reason"
@@ -278,7 +302,10 @@ export function RequestForm({
               onChange={(event) => setReason(event.target.value)}
               required
             />
-            <FieldError message={state.errors?.reason} />
+            <FieldError
+              id="request-reason-error"
+              message={state.errors?.reason}
+            />
           </label>
         </div>
 
@@ -472,6 +499,7 @@ export function RequestForm({
             className="button button-primary"
             disabled={
               pending ||
+              Boolean(state.requestId) ||
               itemLookup.loading ||
               hasDuplicateLines ||
               lines.some((line) => line.itemId.length === 0)
@@ -494,9 +522,13 @@ export function RequestForm({
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ message, id }: { message?: string; id?: string }) {
   if (!message) {
     return null;
   }
-  return <span className="form-message error">{message}</span>;
+  return (
+    <span id={id} className="form-message error">
+      {message}
+    </span>
+  );
 }

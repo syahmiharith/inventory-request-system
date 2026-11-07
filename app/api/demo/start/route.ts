@@ -6,6 +6,7 @@ import {
   workspaceCookie,
 } from "@/lib/demo-session";
 import { handleRouteError } from "@/lib/http";
+import { DomainError } from "@/lib/errors";
 
 export async function GET(request: Request) {
   try {
@@ -28,6 +29,18 @@ export async function GET(request: Request) {
     });
     return response;
   } catch (error) {
+    if (request.headers.get("accept")?.includes("text/html")) {
+      const reason =
+        error instanceof DomainError && error.statusCode === 429
+          ? "busy"
+          : "unavailable";
+      if (reason === "unavailable")
+        console.error("Unable to start demo session");
+      return NextResponse.redirect(
+        new URL(`/demo-unavailable?reason=${reason}`, request.url),
+        303,
+      );
+    }
     return handleRouteError(error);
   }
 }
