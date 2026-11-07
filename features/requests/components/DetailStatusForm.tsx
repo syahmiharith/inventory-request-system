@@ -52,7 +52,13 @@ export function DetailStatusForm({
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error ?? "Unable to update request.");
-      window.location.reload();
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      url.searchParams.set(
+        "success",
+        `Request ${status === "fulfilled" ? "issued" : status} successfully.`,
+      );
+      window.location.assign(url.toString());
     } catch (cause) {
       setError(
         cause instanceof Error
