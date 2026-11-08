@@ -1,8 +1,8 @@
 "use client";
 
-import { DemoWorkspaceControls } from "@/components/ui/DemoWorkspaceControls";
+import { AccountMenu } from "./AccountMenu";
 import type { User } from "@/db/schema";
-import { DemoUserSwitcher } from "@/components/ui/DemoUserSwitcher";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,25 +16,19 @@ export function AppHeader({
   const pathname = usePathname();
   return (
     <header className="app-header" data-testid="app-header">
-      <div className="header-title">
-        <DemoWorkspaceControls />
+      <div className="header-title header-workspace">
+        <span className="workspace-dot" />
+        Private demo<span className="header-lifetime">24-hour workspace</span>
       </div>
-
       <div className="header-actions">
-        <DemoUserSwitcher
-          initialUsers={demoUsers}
-          initialCurrentUser={currentUser}
-        />
-        <div className="viewer-chip sr-only" data-testid="profile-summary">
-          <strong>{initials(currentUser.name)}</strong>
-          <span>{currentUser.role === "admin" ? "Admin" : "Employee"}</span>
-        </div>
+        <AccountMenu currentUser={currentUser} demoUsers={demoUsers} />
       </div>
       <nav className="mobile-navigation" aria-label="Primary navigation">
         {[
           { href: "/", label: "Dashboard" },
           { href: "/inventory", label: "Inventory" },
           { href: "/requests", label: "Requests" },
+          { href: "/support", label: "Help" },
         ].map(({ href, label }) => (
           <Link
             key={href}
@@ -55,13 +49,4 @@ export function AppHeader({
       </nav>
     </header>
   );
-}
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }

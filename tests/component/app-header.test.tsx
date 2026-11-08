@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppHeader } from "@/components/layout/AppHeader";
 
@@ -24,8 +24,9 @@ const users = [
 describe("AppHeader", () => {
   it("shows the demo user switcher and current viewer summary", () => {
     render(<AppHeader currentUser={users[0]} demoUsers={users} />);
-    expect(screen.getByText("Private workspace · 24 hours")).toBeVisible();
-    expect(screen.getByText("Viewing as")).toBeVisible();
+    expect(screen.getByText("Private demo")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Open account menu/ }));
+    expect(screen.getByRole("combobox", { name: "Viewing as" })).toBeVisible();
     expect(screen.getByTestId("profile-summary")).toHaveTextContent("AA");
     expect(screen.getByTestId("profile-summary")).toHaveTextContent("Admin");
   });

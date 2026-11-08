@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardList,
   LayoutDashboard,
+  LifeBuoy,
   Package,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -159,6 +160,16 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
           })}
         </div>
 
+        <Link
+          className="sidebar-link sidebar-support"
+          href="/support"
+          aria-label="Report a problem"
+          title="Report a problem"
+          onClick={() => setMobileOpen(false)}
+        >
+          <LifeBuoy aria-hidden="true" />
+          {!collapsed && <span>Report a problem</span>}
+        </Link>
         <button
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="sidebar-collapse-button"

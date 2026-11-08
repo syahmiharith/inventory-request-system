@@ -1,5 +1,6 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/forms/DatePicker";
 import { Dropdown } from "@/components/ui/forms/Dropdown";
 
 import { useRouter } from "next/navigation";
@@ -280,17 +281,13 @@ export function RequestForm({
 
           <label className="field">
             <span>Required by</span>
-            <input
-              className="input"
-              type="date"
-              name="requiredBy"
-              aria-invalid={Boolean(state.errors?.requiredBy)}
-              aria-describedby={
+            <DatePicker
+              value={requiredBy}
+              onChange={setRequiredBy}
+              invalid={Boolean(state.errors?.requiredBy)}
+              describedBy={
                 state.errors?.requiredBy ? "required-by-error" : undefined
               }
-              value={requiredBy}
-              onChange={(event) => setRequiredBy(event.target.value)}
-              required
             />
             <FieldError
               id="required-by-error"

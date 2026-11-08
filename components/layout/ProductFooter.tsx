@@ -10,13 +10,6 @@ import {
   Minus,
 } from "lucide-react";
 
-const feedbackUrl =
-  "https://github.com/syahmiharith/inventory-request-system/issues/new?" +
-  new URLSearchParams({
-    title: "Inventory Request System feedback",
-    body: "Please use synthetic examples. Do not include personal information or real inventory records.\n\nWhat were you trying to do?\n\nWhat happened?\n\nWhat did you expect?\n\nDevice and browser (optional):\n",
-  }).toString();
-
 export function ProductFooter() {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -43,10 +36,10 @@ export function ProductFooter() {
             <Code2 aria-hidden="true" />
             Source code<span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <a href={feedbackUrl} target="_blank" rel="noopener noreferrer">
+          <a href="/support">
             <MessageSquare aria-hidden="true" />
             Report a problem
-            <span className="sr-only"> on GitHub (opens in a new tab)</span>
+            <span className="sr-only"> Open the problem report form</span>
           </a>
         </nav>
       </div>

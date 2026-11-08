@@ -5,6 +5,7 @@ test("mobile navigation and role selector remain available within the viewport",
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/api/demo/start");
+  await page.getByRole("button", { name: /Open account menu/ }).click();
   const roles = page.getByLabel("Viewing as");
   const box = await roles.boundingBox();
   expect(box).not.toBeNull();
@@ -229,4 +230,55 @@ test("custom filters support keyboard selection and submit the chosen values on 
   await expect(
     page.getByRole("cell", { name: "Pending", exact: true }),
   ).toHaveCount(0);
+});
+
+test("mobile calendar, account menu and problem reporting", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/api/demo/start");
+  await page.getByRole("button", { name: /Open account menu/ }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Account menu" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Account menu" })).toHaveCount(
+    0,
+  );
+  await page
+    .getByRole("link", { name: "Request supplies", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Choose required date" }).click();
+  const calendar = page.getByRole("dialog", {
+    name: "Required date",
+    exact: true,
+  });
+  await expect(calendar).toBeVisible();
+  const selected = calendar.locator('[aria-pressed="true"]');
+  await selected.click();
+  await expect(calendar).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Required by" })).toHaveValue(
+    /^\d{4}-\d{2}-\d{2}$/,
+  );
+  await page.getByRole("button", { name: /Open account menu/ }).click();
+  await page
+    .getByRole("dialog", { name: "Account menu" })
+    .getByRole("link", { name: "Report a problem" })
+    .click();
+  await expect(page).toHaveURL(/support/);
+  await page.getByRole("button", { name: "Prepare report" }).click();
+  await expect(page.getByRole("alert")).toBeVisible();
+  await page.getByLabel("Short title").fill("Demo feedback");
+  await page
+    .getByLabel("What happened?")
+    .fill("Synthetic test of the reporting workflow.");
+  await page.getByRole("button", { name: "Prepare report" }).click();
+  await expect(
+    page.getByRole("link", { name: /Open GitHub draft/ }),
+  ).toHaveAttribute("href", /github.com.*issues\/new/);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });
