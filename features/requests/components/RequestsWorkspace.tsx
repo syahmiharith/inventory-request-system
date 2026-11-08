@@ -1,3 +1,4 @@
+import { Dropdown } from "@/components/ui/forms/Dropdown";
 import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import { MetricOverview } from "@/components/ui/MetricOverview";
@@ -223,28 +224,41 @@ export async function RequestsWorkspace({
                     type="search"
                   />
                 </label>
-                <label className="filter-select">
+                <div className="filter-select">
                   <span>Status</span>
-                  <select defaultValue={selectedStatus ?? ""} name="status">
-                    <option value="">All</option>
-                    {requestStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status === "fulfilled" ? "Issued" : capitalize(status)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="filter-select">
+                  <Dropdown
+                    key={`status-${selectedStatus}`}
+                    label="Status"
+                    name="status"
+                    defaultValue={selectedStatus ?? ""}
+                    options={[
+                      { value: "", label: "All" },
+                      ...requestStatuses.map((status) => ({
+                        value: status,
+                        label:
+                          status === "fulfilled"
+                            ? "Issued"
+                            : capitalize(status),
+                      })),
+                    ]}
+                  />
+                </div>
+                <div className="filter-select">
                   <span>Category</span>
-                  <select defaultValue={selectedCategory} name="category">
-                    <option value="">All</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <Dropdown
+                    key={`category-${selectedCategory}`}
+                    label="Category"
+                    name="category"
+                    defaultValue={selectedCategory}
+                    options={[
+                      { value: "", label: "All" },
+                      ...categories.map((category) => ({
+                        value: category,
+                        label: category,
+                      })),
+                    ]}
+                  />
+                </div>
                 <button className="button button-secondary" type="submit">
                   Apply
                 </button>

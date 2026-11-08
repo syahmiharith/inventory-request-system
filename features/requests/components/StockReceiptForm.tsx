@@ -1,5 +1,7 @@
 "use client";
 
+import { Dropdown } from "@/components/ui/forms/Dropdown";
+
 import { useState, type FormEvent } from "react";
 
 export function StockReceiptForm({
@@ -61,18 +63,18 @@ export function StockReceiptForm({
         <legend className="sr-only">Delivery details</legend>
         <div className="field">
           <label htmlFor={`receipt-item-${requestId}`}>Item</label>
-          <select
-            className="input"
+          <Dropdown
+            label="Item"
             id={`receipt-item-${requestId}`}
             name="itemId"
             required
-          >
-            {items.map((item) => (
-              <option key={item.itemId} value={item.itemId}>
-                {item.itemName}
-              </option>
-            ))}
-          </select>
+            disabled={pending}
+            defaultValue={items[0]?.itemId ?? ""}
+            options={items.map((item) => ({
+              value: item.itemId,
+              label: item.itemName,
+            }))}
+          />
         </div>
         <label className="field">
           Quantity received
