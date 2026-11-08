@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Select } from "@/components/ui/forms/Select";
+import { useEffect, useState } from "react";
+import { Dropdown } from "@/components/ui/forms/Dropdown";
 
 type DemoUser = {
   id: string;
@@ -22,6 +22,11 @@ export function DemoUserSwitcher({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [currentEmail, setCurrentEmail] = useState(initialCurrentUser.email);
+
+  useEffect(
+    () => setCurrentEmail(initialCurrentUser.email),
+    [initialCurrentUser.email],
+  );
 
   async function handleChange(email: string) {
     setPending(true);
@@ -45,20 +50,28 @@ export function DemoUserSwitcher({
   }
 
   return (
-    <label className="actions">
+    <div className="actions">
       <span className="muted">Viewing as</span>
-      <Select
+      <Dropdown
+        label="Viewing as"
         disabled={pending}
         value={currentEmail}
-        onChange={(event) => void handleChange(event.target.value)}
-      >
-        {initialUsers.map((user) => (
-          <option key={user.id} value={user.email}>
-            {user.name} ({user.role})
-          </option>
-        ))}
-      </Select>
+        onChange={(email) => void handleChange(email)}
+        options={initialUsers.map((user) => ({
+          value: user.email,
+          label: `${user.name} (${user.role})`,
+          description:
+            user.role === "admin"
+              ? "Review requests and manage stock"
+              : "Request supplies and track progress",
+        }))}
+      />
+      {pending ? (
+        <span className="sr-only" role="status">
+          Switching role…
+        </span>
+      ) : null}
       {error ? <span role="alert">{error}</span> : null}
-    </label>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Dropdown } from "@/components/ui/forms/Dropdown";
 import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import { MetricOverview } from "@/components/ui/MetricOverview";
@@ -178,26 +179,37 @@ export async function InventoryWorkspace({
                     type="search"
                   />
                 </label>
-                <label className="filter-select">
+                <div className="filter-select">
                   <span>Category</span>
-                  <select defaultValue={selectedCategory} name="category">
-                    <option value="">All</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="filter-select">
+                  <Dropdown
+                    key={`category-${selectedCategory}`}
+                    label="Category"
+                    name="category"
+                    defaultValue={selectedCategory}
+                    options={[
+                      { value: "", label: "All" },
+                      ...categories.map((category) => ({
+                        value: category,
+                        label: category,
+                      })),
+                    ]}
+                  />
+                </div>
+                <div className="filter-select">
                   <span>Stock</span>
-                  <select defaultValue={selectedStock} name="stock">
-                    <option value="">All</option>
-                    <option value="in">In stock</option>
-                    <option value="low">Low stock</option>
-                    <option value="out">Out of stock</option>
-                  </select>
-                </label>
+                  <Dropdown
+                    key={`stock-${selectedStock}`}
+                    label="Stock"
+                    name="stock"
+                    defaultValue={selectedStock}
+                    options={[
+                      { value: "", label: "All" },
+                      { value: "in", label: "In stock" },
+                      { value: "low", label: "Low stock" },
+                      { value: "out", label: "Out of stock" },
+                    ]}
+                  />
+                </div>
                 <button className="button button-secondary" type="submit">
                   Apply
                 </button>

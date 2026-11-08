@@ -40,10 +40,12 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
     .click();
   const itemFields = page.getByRole("combobox", { name: "Item", exact: true });
   await expect(itemFields.first()).toBeEnabled({ timeout: 15000 });
-  await itemFields.first().selectOption(paper.id);
+  await itemFields.first().click();
+  await page.getByRole("option", { name: /A4 Copy Paper/ }).click();
   await page.getByLabel("Quantity", { exact: true }).first().fill("3");
   await page.getByRole("button", { name: "Add another item" }).click();
-  await itemFields.nth(1).selectOption(pen.id);
+  await itemFields.nth(1).click();
+  await page.getByRole("option", { name: /Blue Ballpoint Pens/ }).click();
   await page.getByLabel("Quantity", { exact: true }).nth(1).fill("3");
   const reason = page.getByRole("textbox", { name: "Reason", exact: true });
   await reason.fill("   ");
@@ -108,9 +110,10 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
     approvedItems.find((item: { id: string }) => item.id === paper.id)
       .quantityOnHand,
   ).toBe(paper.quantityOnHand);
+  await page.getByRole("combobox", { name: "Item", exact: true }).click();
   await page
-    .getByRole("combobox", { name: "Item", exact: true })
-    .selectOption(pen.id);
+    .getByRole("option", { name: "Blue Ballpoint Pens", exact: true })
+    .click();
   await page.getByLabel("Quantity received").fill("2");
   await page
     .getByLabel("Delivery reference or reason")
@@ -192,6 +195,37 @@ test("graphical summaries open matching inventory and request records", async ({
   await expect(
     page.getByRole("cell", { name: "Issued", exact: true }).first(),
   ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Pending", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("custom filters support keyboard selection and submit the chosen values on mobile", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/api/demo/start");
+  await page.goto("/inventory");
+  const stock = page.getByRole("combobox", { name: "Stock", exact: true });
+  await stock.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("l");
+  await page.keyboard.press("Enter");
+  await expect(stock).toContainText("Low stock");
+  await page.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page).toHaveURL(/stock=low/);
+  await expect(page.getByRole("cell", { name: /A4 Copy Paper/ })).toHaveCount(
+    0,
+  );
+  await page.goto("/requests");
+  await page.getByRole("combobox", { name: "Status", exact: true }).click();
+  const menu = page.getByRole("listbox", { name: "Status", exact: true });
+  const box = await menu.boundingBox();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  await page.getByRole("option", { name: "Issued", exact: true }).click();
+  await page.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page).toHaveURL(/status=fulfilled/);
   await expect(
     page.getByRole("cell", { name: "Pending", exact: true }),
   ).toHaveCount(0);

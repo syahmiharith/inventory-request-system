@@ -25,9 +25,10 @@ for (const viewport of [
     await expect(
       page.getByRole("button", { name: "Issue", exact: true }),
     ).toBeDisabled();
+    await page.getByRole("combobox", { name: "Item", exact: true }).click();
     await page
-      .getByLabel("Item", { exact: true })
-      .selectOption({ label: "Blue Ballpoint Pens" });
+      .getByRole("option", { name: "Blue Ballpoint Pens", exact: true })
+      .click();
     await page.getByLabel("Quantity received").fill("2");
     await page
       .getByLabel("Delivery reference or reason")

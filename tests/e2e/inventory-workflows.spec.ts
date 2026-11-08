@@ -212,10 +212,9 @@ async function switchDemoUser(
   label: string,
 ) {
   await page.goto("/");
-  await page.getByLabel("Viewing as").selectOption({ label });
-  await expect(page.getByLabel("Viewing as")).toHaveValue(
-    label.includes("(admin)")
-      ? "admin@inventory.local"
-      : "employee@inventory.local",
-  );
+  await page.getByRole("combobox", { name: "Viewing as" }).click();
+  await page.getByRole("option", { name: label, exact: false }).click();
+  await expect(
+    page.getByRole("combobox", { name: "Viewing as" }),
+  ).toContainText(label);
 }

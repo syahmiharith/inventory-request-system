@@ -1,5 +1,7 @@
 "use client";
 
+import { Dropdown } from "@/components/ui/forms/Dropdown";
+
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { ConfirmDiscardDialog } from "@/components/ui/modal/ConfirmDiscardDialog";
@@ -373,33 +375,30 @@ export function RequestForm({
                 <input name="lineId" type="hidden" value={line.id} />
                 <label className="field">
                   <span>Item</span>
-                  <select
-                    aria-invalid={Boolean(
+                  <Dropdown
+                    label="Item"
+                    name="itemId"
+                    required
+                    value={line.itemId}
+                    invalid={Boolean(
                       state.errors?.[`items.${index}.itemId`] || duplicate,
                     )}
-                    className="input"
                     disabled={itemLookup.loading || options.length === 0}
-                    name="itemId"
-                    aria-describedby={
+                    describedBy={
                       state.errors?.[`items.${index}.itemId`]
                         ? `item-error-${line.id}`
                         : undefined
                     }
-                    onChange={(event) =>
-                      updateLine(line.id, { itemId: event.target.value })
+                    onChange={(value) => updateLine(line.id, { itemId: value })}
+                    options={
+                      options.length
+                        ? options.map((item) => ({
+                            value: item.id,
+                            label: `${item.name} (${item.sku})`,
+                          }))
+                        : [{ value: "", label: "No matching items" }]
                     }
-                    required
-                    value={line.itemId}
-                  >
-                    {options.length === 0 ? (
-                      <option value="">No matching items</option>
-                    ) : null}
-                    {options.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} ({item.sku})
-                      </option>
-                    ))}
-                  </select>
+                  />
                   <FieldError
                     id={`item-error-${line.id}`}
                     message={state.errors?.[`items.${index}.itemId`]}
