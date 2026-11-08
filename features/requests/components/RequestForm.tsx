@@ -286,7 +286,7 @@ export function RequestForm({
               value={requiredBy}
               onChange={(value) => {
                 setRequiredBy(value);
-                setDirty(true);
+                if (value !== requiredBy) setDirty(true);
               }}
               invalid={Boolean(state.errors?.requiredBy)}
               describedBy={
