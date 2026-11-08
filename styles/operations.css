@@ -1805,3 +1805,15 @@ body {
 .custom-dropdown[aria-invalid="true"] {
   border-color: var(--red);
 }
+@media (max-width: 480px) {
+  .data-toolbar .filter-select {
+    flex: 1 1 calc(50% - 8px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 6px 10px 0;
+  }
+  .data-toolbar .filter-select .custom-dropdown {
+    padding: 0;
+  }
+}
