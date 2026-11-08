@@ -2121,3 +2121,30 @@ textarea.input {
     min-height: 36px;
   }
 }
+.support-page .route-heading {
+  margin-bottom: 0;
+}
+textarea.input {
+  resize: none;
+}
+.account-avatar {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+}
+.account-avatar > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #edf0ea;
+}
+.account-avatar:hover,
+.account-avatar[aria-expanded="true"] {
+  background: transparent;
+}
+.account-avatar:hover > span,
+.account-avatar[aria-expanded="true"] > span {
+  background: #dfe6db;
+}
