@@ -41,3 +41,5 @@ Browser evidence: local receipt 1 → 3 pens; issuance preview paper 12 → 9 an
 - Inventory shows the share of all workspace supplies that are healthy, low stock, or unavailable. Requests shows the share of all visible requests in each lifecycle status, with employee ownership respected.
 - Every summary links to its matching stock/status group, clearing other filters. The all-records scope is explicitly labelled. Zero totals produce zero-length bars and 0%, never invalid percentages.
 - Summaries are omitted while a detail panel is open to preserve room for the task. No charting dependencies or paid resources added.
+
+Privacy and scenario controls: Airtasker FAQ rows (https://mobbin.com/screens/757cbfd3-4573-4261-8681-f8fbfa25c583) inform custom disclosure treatment; HoneyBook setup tasks (https://mobbin.com/screens/7c915d6b-2a99-4eb0-956d-e7a3a97bb265) inform visible task cards with descriptions. These are structural references from other domains. Privacy uses a styled button with plus/minus, aria-expanded and a controlled panel. Scenario guides remain visible and link to the existing seeded requests. Browser-default disclosure markers are removed.

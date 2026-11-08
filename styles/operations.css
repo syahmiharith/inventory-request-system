@@ -274,22 +274,6 @@ tbody tr.selected {
 .stock-watch-row span {
   color: var(--muted);
 }
-.walkthrough-disclosure {
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
-  color: var(--muted);
-  font-size: 13px;
-}
-.walkthrough-disclosure summary {
-  cursor: pointer;
-}
-.walkthrough-disclosure .demo-scenarios {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  text-decoration: underline;
-}
 .request-detail-hero,
 .request-reason-card,
 .requester-summary-card,
@@ -1336,9 +1320,6 @@ body {
 .dashboard-bottom-grid .stock-watch-row strong {
   font-weight: 550;
 }
-.graphical-dashboard .walkthrough-disclosure {
-  margin-top: 28px;
-}
 @media (max-width: 1100px) {
   .stock-chart-body {
     gap: 14px;
@@ -1573,27 +1554,121 @@ body {
   width: 16px;
   height: 16px;
 }
-.product-footer details {
-  margin-top: 0;
+.privacy-disclosure {
+  margin-top: 4px;
   max-width: 660px;
   font-size: 12px;
 }
-.product-footer summary {
-  cursor: pointer;
+.privacy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-height: 44px;
-  width: fit-content;
-  padding: 12px 0;
+  padding: 0 10px;
+  margin-left: -10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
 }
-.product-footer summary:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.privacy-toggle svg {
+  width: 15px;
+  height: 15px;
 }
+.privacy-toggle svg:last-child {
+  margin-left: 8px;
+  width: 14px;
+  height: 14px;
+}
+.privacy-toggle:hover {
+  background: #f2f3f1;
+  color: var(--text);
+}
+.product-footer .privacy-copy {
+  padding: 4px 0 8px;
+}
+.privacy-toggle:focus-visible,
 .product-footer a:focus-visible,
-.product-footer summary:focus-visible {
+.scenario-card:focus-visible {
   outline: 2px solid var(--text);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
-
+.scenario-guides {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+.scenario-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.scenario-heading h2 {
+  font-size: 16px;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+.scenario-heading p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.scenario-card {
+  display: flex;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--text);
+  background: var(--surface);
+}
+.scenario-card:hover {
+  background: #f5f6f3;
+  border-color: #c5ccc5;
+}
+.scenario-card > svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #577960;
+  margin-top: 2px;
+}
+.scenario-card > span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.scenario-card strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.scenario-card span span {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 6px 0 12px;
+}
+.scenario-card b {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 550;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .scenario-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 600px) {
   .product-footer-row {
     flex-direction: column;

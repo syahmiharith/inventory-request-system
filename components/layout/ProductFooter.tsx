@@ -1,4 +1,14 @@
-import { ArrowUpRight, Code2, MessageSquare } from "lucide-react";
+"use client";
+
+import { useId, useState } from "react";
+import {
+  ArrowUpRight,
+  Code2,
+  MessageSquare,
+  ShieldCheck,
+  Plus,
+  Minus,
+} from "lucide-react";
 
 const feedbackUrl =
   "https://github.com/syahmiharith/inventory-request-system/issues/new?" +
@@ -8,6 +18,8 @@ const feedbackUrl =
   }).toString();
 
 export function ProductFooter() {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   return (
     <footer className="product-footer">
       <div className="product-footer-row">
@@ -38,16 +50,26 @@ export function ProductFooter() {
           </a>
         </nav>
       </div>
-      <details>
-        <summary>Privacy &amp; storage</summary>
-        <p>
+      <div className="privacy-disclosure">
+        <button
+          className="privacy-toggle"
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen(!open)}
+        >
+          <ShieldCheck aria-hidden="true" />
+          <span>Privacy &amp; storage</span>
+          {open ? <Minus aria-hidden="true" /> : <Plus aria-hidden="true" />}
+        </button>
+        <p id={panelId} hidden={!open} className="privacy-copy">
           This demo stores requests and stock changes in a private workspace for
           24 hours. A browser cookie keeps you connected to it. Expired
           workspaces are removed during cleanup. Reset my demo starts a fresh
           workspace. Use sample information only; feedback submitted on GitHub
           is public.
         </p>
-      </details>
+      </div>
     </footer>
   );
 }

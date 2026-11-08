@@ -1,7 +1,13 @@
 import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { ArrowRight, AlertCircle } from "lucide-react";
+import {
+  ArrowRight,
+  AlertCircle,
+  PackageCheck,
+  PackagePlus,
+  Layers,
+} from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatusBadge } from "@/components/ui/badges/StatusBadge";
@@ -352,19 +358,47 @@ export default async function HomePage() {
           )}
         </section>
       </div>
-      <details className="walkthrough-disclosure">
-        <summary>Try a guided scenario</summary>
-        <div className="demo-scenarios">
-          <Link href="/requests?q=REQ-DEMO-1">Ordinary fulfillment</Link>
-          <Link href="/requests?q=REQ-DEMO-2">Shortage recovery</Link>
-          <Link href="/requests?q=Competing">Competing requests</Link>
+      <section className="scenario-guides" aria-labelledby="scenario-title">
+        <div className="scenario-heading">
+          <div>
+            <h2 id="scenario-title">Explore the workflow</h2>
+            <p>Try a scenario in your private workspace.</p>
+          </div>
+          <ReviewAsAdminButton />
         </div>
-        <p>
-          Approve a request, record missing stock, then issue the supplies.
-          Approval does not deduct stock.
-        </p>
-        <ReviewAsAdminButton />
-      </details>
+        <div className="scenario-grid">
+          <Link className="scenario-card" href="/requests?q=REQ-DEMO-1">
+            <PackageCheck aria-hidden="true" />
+            <span>
+              <strong>Issue available supplies</strong>
+              <span>
+                Approve a request, then see stock change when you issue it.
+              </span>
+              <b>Open request</b>
+            </span>
+          </Link>
+          <Link className="scenario-card" href="/requests?q=REQ-DEMO-2">
+            <PackagePlus aria-hidden="true" />
+            <span>
+              <strong>Recover from a shortage</strong>
+              <span>
+                Record a delivery and retry a request that needs more stock.
+              </span>
+              <b>Resolve shortage</b>
+            </span>
+          </Link>
+          <Link className="scenario-card" href="/requests?q=Competing">
+            <Layers aria-hidden="true" />
+            <span>
+              <strong>Handle competing requests</strong>
+              <span>
+                See how two requests compete for the last available units.
+              </span>
+              <b>Compare requests</b>
+            </span>
+          </Link>
+        </div>
+      </section>
       <ProductFooter />
     </main>
   );
