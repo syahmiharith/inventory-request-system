@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MetricOverview } from "@/components/ui/MetricOverview";
+import { getDashboardInventoryKpis } from "@/features/dashboard/services/dashboard.service";
 import { ChevronRight, Search } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
@@ -68,15 +70,18 @@ export async function InventoryWorkspace({
   )
     ? (searchParams.dir as (typeof sortDirections)[number])
     : "asc";
-  const itemResult = await listItems({
-    category: selectedCategory,
-    dir: selectedDir,
-    page: currentPage,
-    pageSize,
-    q: query,
-    sort: selectedSort,
-    stock: selectedStock,
-  });
+  const [summary, itemResult] = await Promise.all([
+    getDashboardInventoryKpis(currentUser),
+    listItems({
+      category: selectedCategory,
+      dir: selectedDir,
+      page: currentPage,
+      pageSize,
+      q: query,
+      sort: selectedSort,
+      stock: selectedStock,
+    }),
+  ]);
   const categories = itemResult.categories;
   const pagedItems = itemResult.rows;
   const selectedOutsideFilters =
@@ -107,6 +112,40 @@ export async function InventoryWorkspace({
             description="Stock on hand, held aside, and available to issue."
             actions={isAdmin ? <InventoryCreateModalButton /> : null}
           />
+
+          {!panel && (
+            <MetricOverview
+              label="Stock overview"
+              total={summary.totalItems}
+              noun="supplies"
+              metrics={[
+                {
+                  label: "Healthy",
+                  count: summary.totalItems - summary.lowStockItems,
+                  color: "#577960",
+                  href: "/inventory?stock=in",
+                  active: selectedStock === "in",
+                },
+                {
+                  label: "Low stock",
+                  count:
+                    summary.lowStockItems -
+                    (summary.totalItems - summary.availableItems),
+                  color: "#c49b43",
+                  href: "/inventory?stock=low",
+                  active: selectedStock === "low",
+                },
+                {
+                  label: "Unavailable",
+                  count: summary.totalItems - summary.availableItems,
+                  color: "#bd6655",
+                  href: "/inventory?stock=out",
+                  active: selectedStock === "out",
+                },
+              ]}
+              note="Available stock excludes holds. Select a summary to view that stock group across all supplies."
+            />
+          )}
 
           {searchParams.success ? (
             <p aria-live="polite" className="alert alert-success">

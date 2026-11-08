@@ -25,3 +25,19 @@ Browser evidence: local receipt 1 → 3 pens; issuance preview paper 12 → 9 an
 - Applied shared input focus/error/disabled treatment, full-width request reason, quiet availability readout, exact shortage copy, consistent button and badge rhythm, and distinct filtered/initial empty states.
 - Inventory creation now retains all fields following a failed server action; regression coverage checks retained values and accessible SKU error description.
 - References guide presentation only; server authorization, validation, stock rules and database schema remain unchanged.
+
+## Graphical dashboard
+
+- Steep dashboard: https://mobbin.com/screens/e6aba7a1-65b5-4903-ba4a-c892852ca7e0 — structural reference for large headline values paired with restrained bars and rings. Analytics-domain structure only; inventory metric definitions are our own.
+- Amplitude chart: https://mobbin.com/screens/9f953ce4-7de1-4528-9832-57063359b799 — explicit time window and readable chart labels; no forecasts or invented comparisons copied.
+- Workload is a partition of open requests: pending, approved with available stock, approved with any short line. Readiness is per request, not an allocation promise.
+- Stock ring counts supplies, not mixed physical units: healthy, low but positive available, zero available. Holds are deducted from on-hand stock.
+- Daily issuance bars cover seven UTC calendar dates, including today. Counts are grouped by fulfilled_at, scoped to the workspace and employee. Seeded demo history is explicitly disclosed.
+- Queue takes the earliest five pending and earliest five approved requests, merges by required date and creation date, and displays the earliest five. Stock risks include zero-stock supplies.
+
+## Inventory and Requests graphical summaries
+
+- Shopify orders: https://mobbin.com/screens/168c2cfe-2399-4b47-ae3a-6a3df57970bd — compact graphical summaries above the operational table, keeping filters and rows primary.
+- Inventory shows the share of all workspace supplies that are healthy, low stock, or unavailable. Requests shows the share of all visible requests in each lifecycle status, with employee ownership respected.
+- Every summary links to its matching stock/status group, clearing other filters. The all-records scope is explicitly labelled. Zero totals produce zero-length bars and 0%, never invalid percentages.
+- Summaries are omitted while a detail panel is open to preserve room for the task. No charting dependencies or paid resources added.

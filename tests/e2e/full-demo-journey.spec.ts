@@ -168,3 +168,31 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
     final.find((item: { id: string }) => item.id === paper.id).quantityOnHand,
   ).toBe(paper.quantityOnHand - 3);
 });
+
+test("graphical summaries open matching inventory and request records", async ({
+  page,
+}) => {
+  await page.goto("/api/demo/start");
+  await page.goto("/inventory");
+  await page
+    .getByRole("link", { name: "Show low stock: 1 supply", exact: true })
+    .click();
+  await expect(page).toHaveURL(/stock=low/);
+  await expect(
+    page.getByRole("cell", { name: /Blue Ballpoint Pens/ }),
+  ).toBeVisible();
+  await expect(page.getByRole("cell", { name: /A4 Copy Paper/ })).toHaveCount(
+    0,
+  );
+  await page.goto("/requests");
+  await page
+    .getByRole("link", { name: "Show issued: 1 request", exact: true })
+    .click();
+  await expect(page).toHaveURL(/status=fulfilled/);
+  await expect(
+    page.getByRole("cell", { name: "Issued", exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Pending", exact: true }),
+  ).toHaveCount(0);
+});

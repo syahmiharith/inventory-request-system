@@ -685,3 +685,41 @@ function weekStart() {
 function soonDate() {
   return new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 }
+
+// Calendar-day issuance counts, scoped to the workspace and acting employee.
+// UTC is explicit so server and browser agree on day boundaries.
+export async function getIssuanceActivity(viewer: User, now = new Date()) {
+  const end = new Date(now);
+  end.setUTCHours(0, 0, 0, 0);
+  end.setUTCDate(end.getUTCDate() + 1);
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - 7);
+  const rows = await (
+    await getScopedDb()
+  )
+    .select({
+      day: sql<string>`to_char(${inventoryRequests.fulfilledAt} at time zone 'UTC', 'YYYY-MM-DD')`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(inventoryRequests)
+    .where(
+      and(
+        eq(inventoryRequests.status, "fulfilled"),
+        viewer.role === "employee"
+          ? eq(inventoryRequests.requesterId, viewer.id)
+          : undefined,
+        sql`${inventoryRequests.fulfilledAt} >= ${start.toISOString()}::timestamptz`,
+        sql`${inventoryRequests.fulfilledAt} < ${end.toISOString()}::timestamptz`,
+      ),
+    )
+    .groupBy(
+      sql`to_char(${inventoryRequests.fulfilledAt} at time zone 'UTC', 'YYYY-MM-DD')`,
+    );
+  const counts = new Map(rows.map((row) => [row.day, row.count]));
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(start);
+    day.setUTCDate(day.getUTCDate() + index);
+    const date = day.toISOString().slice(0, 10);
+    return { date, count: counts.get(date) ?? 0 };
+  });
+}

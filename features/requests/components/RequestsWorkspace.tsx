@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MetricOverview } from "@/components/ui/MetricOverview";
+import { getDashboardRequestKpis } from "@/features/dashboard/services/dashboard.service";
 import { ChevronRight, Search } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
@@ -79,18 +81,21 @@ export async function RequestsWorkspace({
   )
     ? (searchParams.dir as (typeof sortDirections)[number])
     : "desc";
-  const requestResult = await listRequests(
-    {
-      category: selectedCategory,
-      dir: selectedDir,
-      page: currentPage,
-      pageSize,
-      q: query,
-      sort: selectedSort,
-      status: selectedStatus,
-    },
-    currentUser,
-  );
+  const [summary, requestResult] = await Promise.all([
+    getDashboardRequestKpis(currentUser),
+    listRequests(
+      {
+        category: selectedCategory,
+        dir: selectedDir,
+        page: currentPage,
+        pageSize,
+        q: query,
+        sort: selectedSort,
+        status: selectedStatus,
+      },
+      currentUser,
+    ),
+  ]);
   const isAdmin = currentUser.role === "admin";
   const categories = requestResult.categories;
   const pagedRequests = requestResult.rows;
@@ -141,6 +146,49 @@ export async function RequestsWorkspace({
               ) : null
             }
           />
+
+          {!panel && (
+            <MetricOverview
+              label={isAdmin ? "Request overview" : "Your request overview"}
+              total={summary.totalRequests}
+              noun="requests"
+              metrics={[
+                {
+                  label: "Awaiting review",
+                  count: summary.pendingRequests,
+                  color: "#c49b43",
+                  href: "/requests?status=pending",
+                  active: selectedStatus === "pending",
+                },
+                {
+                  label: "Approved",
+                  count: summary.approvedRequests,
+                  color: "#768ba0",
+                  href: "/requests?status=approved",
+                  active: selectedStatus === "approved",
+                },
+                {
+                  label: "Issued",
+                  count: summary.fulfilledRequests,
+                  color: "#577960",
+                  href: "/requests?status=fulfilled",
+                  active: selectedStatus === "fulfilled",
+                },
+                {
+                  label: "Rejected",
+                  count:
+                    summary.totalRequests -
+                    summary.pendingRequests -
+                    summary.approvedRequests -
+                    summary.fulfilledRequests,
+                  color: "#9b817c",
+                  href: "/requests?status=rejected",
+                  active: selectedStatus === "rejected",
+                },
+              ]}
+              note={`${summary.approvedRequests - summary.blockedFulfillment} approved with stock available · ${summary.blockedFulfillment} blocked by stock. Availability is checked again at issuance.`}
+            />
+          )}
 
           {searchParams.success && !panel ? (
             <p aria-live="polite" className="alert alert-success">
