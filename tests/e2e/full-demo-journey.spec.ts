@@ -23,7 +23,7 @@ test("mobile navigation and role selector remain available within the viewport",
     .getByRole("link", { name: "Dashboard", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Request Dashboard", exact: true }),
+    page.getByRole("heading", { name: "Dashboard", exact: true }),
   ).toBeVisible();
 });
 
@@ -90,8 +90,11 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
     .getByRole("button", { name: "Review this request as demo admin" })
     .click();
   await expect(page).toHaveURL(new RegExp(`/requests/${requestId}`));
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm approve", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Issue", exact: true }),
   ).toBeDisabled();
@@ -136,8 +139,11 @@ test("visitor submits two supplies, retains invalid input, and recovers a commit
   await expect(
     page.getByRole("button", { name: "Issue", exact: true }),
   ).toBeEnabled({ timeout: 15000 });
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Issue", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm issue", exact: true })
+    .click();
   await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
   await expect(
     page
