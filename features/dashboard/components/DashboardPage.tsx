@@ -1,3 +1,4 @@
+import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ArrowRight, AlertCircle } from "lucide-react";
@@ -364,6 +365,7 @@ export default async function HomePage() {
         </p>
         <ReviewAsAdminButton />
       </details>
+      <ProductFooter />
     </main>
   );
 }

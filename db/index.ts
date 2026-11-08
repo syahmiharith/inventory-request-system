@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { assertDeploymentDatabase } from "./deployment-boundary";
 
 loadLocalEnv();
 
@@ -30,6 +31,8 @@ if (
     "Production database URL must point to a hosted PostgreSQL database.",
   );
 }
+
+assertDeploymentDatabase(connectionString, process.env.VERCEL_ENV);
 
 const client = postgres(connectionString, {
   connection: {
