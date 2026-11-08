@@ -93,7 +93,7 @@ export function DetailStatusForm({
           {fulfillPreview && (
             <pre className="issuance-preview">{fulfillPreview}</pre>
           )}
-          <form onSubmit={submit}>
+          <form noValidate onSubmit={submit}>
             {status === "rejected" && (
               <label className="field">
                 Reason for rejection

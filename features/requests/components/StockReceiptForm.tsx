@@ -56,7 +56,7 @@ export function StockReceiptForm({
   }
 
   return (
-    <form onSubmit={submit} aria-busy={pending}>
+    <form noValidate onSubmit={submit} aria-busy={pending}>
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="key" value={key} />
       <fieldset disabled={pending} className="form-grid receipt-fields">

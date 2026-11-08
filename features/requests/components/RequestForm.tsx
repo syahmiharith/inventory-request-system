@@ -249,6 +249,7 @@ export function RequestForm({
       title="New request"
     >
       <form
+        noValidate
         action={formAction}
         className="form-panel"
         onChange={() => setDirty(true)}
@@ -283,7 +284,10 @@ export function RequestForm({
             <span>Required by</span>
             <DatePicker
               value={requiredBy}
-              onChange={setRequiredBy}
+              onChange={(value) => {
+                setRequiredBy(value);
+                setDirty(true);
+              }}
               invalid={Boolean(state.errors?.requiredBy)}
               describedBy={
                 state.errors?.requiredBy ? "required-by-error" : undefined
