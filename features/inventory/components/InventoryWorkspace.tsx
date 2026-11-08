@@ -1,3 +1,4 @@
+import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import { MetricOverview } from "@/components/ui/MetricOverview";
 import { getDashboardInventoryKpis } from "@/features/dashboard/services/dashboard.service";
@@ -351,6 +352,7 @@ export async function InventoryWorkspace({
           </section>
         </section>
         {overlay}
+        <ProductFooter />
       </main>
     </WorkspaceLayout>
   );

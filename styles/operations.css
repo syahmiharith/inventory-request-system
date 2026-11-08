@@ -1529,3 +1529,67 @@ body {
     align-items: flex-start;
   }
 }
+
+/* Shared product provenance and storage disclosure, after the working content. */
+.product-footer {
+  margin-top: 32px;
+  padding: 24px 0 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+.product-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.product-footer p {
+  margin: 0;
+  line-height: 1.7;
+}
+.product-footer strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.product-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+.product-footer a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  border-radius: 4px;
+}
+.product-footer a:hover {
+  color: var(--text);
+}
+.product-footer svg {
+  width: 16px;
+  height: 16px;
+}
+.product-footer details {
+  margin-top: 8px;
+  max-width: 660px;
+  font-size: 12px;
+}
+.product-footer summary {
+  cursor: pointer;
+  min-height: 44px;
+  width: fit-content;
+  padding: 12px 0;
+}
+.product-footer summary:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.product-footer a:focus-visible,
+.product-footer summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}

@@ -48,6 +48,9 @@ export async function rateLimit(key: string, limit: number, seconds: number) {
 }
 
 export async function createWorkspace() {
+  // Previews use their own database login. Reclaim expired test data on entry
+  // without requiring a paid scheduler or exposing production cleanup secrets.
+  if (process.env.VERCEL_ENV === "preview") await cleanupExpiredWorkspaces();
   const token = randomBytes(32).toString("hex");
   const workspace = await db.transaction(async (tx) => {
     const [workspace] = await tx

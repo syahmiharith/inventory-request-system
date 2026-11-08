@@ -6,7 +6,7 @@ The database API retains `fulfilled` as its terminal status. Screens call this I
 
 ## Shared-project deployment
 
-The free hosted demo uses the `inventory_demo` schema inside the existing `inventory-request-module` Supabase project. Its `inventory_demo_runtime` login owns the private demo objects, has `search_path=inventory_demo`, and cannot read the existing public request table. The restricted connection is stored as the Vercel Production `DATABASE_URL` secret and a branch-specific Preview secret. Production uses the private schema too.
+The free hosted demo uses the `inventory_demo` schema inside the existing `inventory-request-module` Supabase project. Its `inventory_demo_runtime` login owns the private demo objects, has `search_path=inventory_demo`, and cannot read the existing public request table. The restricted connection is stored as the Vercel Production `DATABASE_URL` secret only. Previews use the separate `inventory_preview` schema and `inventory_preview_runtime` login; see [preview isolation](./preview-isolation.md).
 
 Supabase migration `bootstrap_private_inventory_demo` created this schema by applying the repository migration chain with every explicit public-schema reference replaced by the private schema name. The original public tables were outside that migration boundary. Keep this schema outside the Data API's exposed schemas. For future hosted changes, review and apply private-schema-qualified migrations. The standard public migration chain is for standalone databases and must not be run against this shared-project deployment.
 

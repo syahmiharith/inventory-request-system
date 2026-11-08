@@ -1,3 +1,4 @@
+import { ProductFooter } from "@/components/layout/ProductFooter";
 import Link from "next/link";
 import { MetricOverview } from "@/components/ui/MetricOverview";
 import { getDashboardRequestKpis } from "@/features/dashboard/services/dashboard.service";
@@ -464,6 +465,7 @@ export async function RequestsWorkspace({
           </section>
         </section>
         {overlay}
+        <ProductFooter />
       </main>
     </WorkspaceLayout>
   );
