@@ -3,18 +3,17 @@ import type { ReactNode } from "react";
 export function EmptyState({
   action,
   children,
+  title,
 }: {
   action?: ReactNode;
   children: ReactNode;
+  title?: string;
 }) {
-  if (action) {
-    return (
-      <div className="empty-state-card">
-        <p>{children}</p>
-        {action}
-      </div>
-    );
-  }
-
-  return <p className="empty-state">{children}</p>;
+  return (
+    <div className="empty-state-card" role="status">
+      {title ? <h3>{title}</h3> : null}
+      <p>{children}</p>
+      {action ? <div className="empty-state-action">{action}</div> : null}
+    </div>
+  );
 }

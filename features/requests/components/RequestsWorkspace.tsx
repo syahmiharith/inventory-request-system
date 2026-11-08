@@ -7,7 +7,6 @@ import { DataTable } from "@/components/ui/table/DataTable";
 import { DataToolbar } from "@/components/ui/DataToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pagination } from "@/components/ui/table/Pagination";
-import { ColumnResizeHandle } from "@/components/ui/table/ResizableDataTable";
 import { SortHeader, sortAria } from "@/components/ui/table/SortHeader";
 import { StatusBadge } from "@/components/ui/badges/StatusBadge";
 import type { User } from "@/db/schema";
@@ -44,16 +43,6 @@ const requestSortKeys = [
   "requiredBy",
 ] as const;
 const sortDirections = ["asc", "desc"] as const;
-const requestTableColumns = [
-  { id: "request", defaultWidth: 180, minWidth: 140 },
-  { id: "requester", defaultWidth: 230, minWidth: 170 },
-  { id: "items", defaultWidth: 360, minWidth: 220 },
-  { id: "quantity", defaultWidth: 92, minWidth: 76 },
-  { id: "status", defaultWidth: 140, minWidth: 120 },
-  { id: "stock", defaultWidth: 170, minWidth: 140 },
-  { id: "created", defaultWidth: 120, minWidth: 100 },
-  { id: "action", defaultWidth: 48, minWidth: 44 },
-];
 type RequestRow = Awaited<ReturnType<typeof listRequests>>["rows"][number];
 type RequestItemRow = RequestRow["items"][number];
 
@@ -143,8 +132,8 @@ export async function RequestsWorkspace({
             title="Requests"
             description={
               isAdmin
-                ? "Review inventory requests and fulfill approved requests."
-                : "Track your demo-user inventory requests."
+                ? "Review requests, resolve shortages, and issue supplies."
+                : "Track your requests from submission to issuance."
             }
             actions={
               !isAdmin ? (
@@ -153,13 +142,13 @@ export async function RequestsWorkspace({
             }
           />
 
-          {searchParams.success ? (
+          {searchParams.success && !panel ? (
             <p aria-live="polite" className="alert alert-success">
               {searchParams.success}
             </p>
           ) : null}
 
-          {searchParams.error ? (
+          {searchParams.error && !panel ? (
             <p aria-live="polite" className="alert alert-error">
               {searchParams.error}
             </p>
@@ -172,7 +161,7 @@ export async function RequestsWorkspace({
           ) : null}
 
           <section className="panel">
-            <form action="/requests">
+            <form action="/requests" className="list-filter-form" role="search">
               <DataToolbar>
                 <label className="search-field">
                   <span className="sr-only">Search requests</span>
@@ -181,14 +170,14 @@ export async function RequestsWorkspace({
                     className="input"
                     defaultValue={searchParams.q ?? ""}
                     name="q"
-                    placeholder="Search code, requester, or item"
+                    placeholder="Search requests"
                     type="search"
                   />
                 </label>
                 <label className="filter-select">
                   <span>Status</span>
                   <select defaultValue={selectedStatus ?? ""} name="status">
-                    <option value="">All statuses</option>
+                    <option value="">All</option>
                     {requestStatuses.map((status) => (
                       <option key={status} value={status}>
                         {status === "fulfilled" ? "Issued" : capitalize(status)}
@@ -199,7 +188,7 @@ export async function RequestsWorkspace({
                 <label className="filter-select">
                   <span>Category</span>
                   <select defaultValue={selectedCategory} name="category">
-                    <option value="">All categories</option>
+                    <option value="">All</option>
                     {categories.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -208,7 +197,7 @@ export async function RequestsWorkspace({
                   </select>
                 </label>
                 <button className="button button-secondary" type="submit">
-                  Filter
+                  Apply
                 </button>
                 {query ||
                 selectedStatus ||
@@ -221,35 +210,35 @@ export async function RequestsWorkspace({
               </DataToolbar>
             </form>
             <p className="list-count-meta">
-              Showing {pagedRequests.length} of {requestResult.totalCount}{" "}
-              request rows · filters{" "}
-              {formatFilterSummary({
-                category: selectedCategory,
-                q: query,
-                status: selectedStatus ?? "",
-              })}
+              {requestResult.totalCount}{" "}
+              {requestResult.totalCount === 1 ? "request" : "requests"}
             </p>
 
             {requestResult.totalCount === 0 ? (
               <EmptyState
+                title={
+                  Boolean(query || selectedCategory || selectedStatus)
+                    ? "No matching requests"
+                    : "No requests yet"
+                }
                 action={
-                  !isAdmin ? (
+                  Boolean(query || selectedCategory || selectedStatus) ? (
+                    <Link className="button button-secondary" href="/requests">
+                      Clear filters
+                    </Link>
+                  ) : !isAdmin ? (
                     <RequestCreateModalButton
                       requesterName={currentUser.name}
                     />
                   ) : null
                 }
               >
-                {isAdmin
-                  ? "No employee requests match this view. New employee requests will appear here."
-                  : "You have no demo-user requests in this view."}
+                {Boolean(query || selectedCategory || selectedStatus)
+                  ? "Try a different search or clear your filters to see all requests."
+                  : "Submitted requests will appear here with their current status."}
               </EmptyState>
             ) : (
-              <DataTable
-                className="requests-table"
-                columns={requestTableColumns}
-                tableId="requests-table"
-              >
+              <DataTable className="requests-table">
                 <thead>
                   <tr>
                     <th
@@ -267,11 +256,6 @@ export async function RequestsWorkspace({
                           status: selectedStatus ?? "",
                         }}
                         sortKey="request"
-                      />
-                      <ColumnResizeHandle
-                        columnId="request"
-                        minWidth={140}
-                        tableId="requests-table"
                       />
                     </th>
                     <th
@@ -294,11 +278,6 @@ export async function RequestsWorkspace({
                         }}
                         sortKey="requester"
                       />
-                      <ColumnResizeHandle
-                        columnId="requester"
-                        minWidth={170}
-                        tableId="requests-table"
-                      />
                     </th>
                     <th
                       aria-sort={sortAria("items", selectedSort, selectedDir)}
@@ -315,37 +294,6 @@ export async function RequestsWorkspace({
                           status: selectedStatus ?? "",
                         }}
                         sortKey="items"
-                      />
-                      <ColumnResizeHandle
-                        columnId="items"
-                        minWidth={220}
-                        tableId="requests-table"
-                      />
-                    </th>
-                    <th
-                      aria-sort={sortAria(
-                        "quantity",
-                        selectedSort,
-                        selectedDir,
-                      )}
-                      className="col-number"
-                    >
-                      <SortHeader
-                        activeDir={selectedDir}
-                        activeSort={selectedSort}
-                        basePath="/requests"
-                        label="Qty"
-                        params={{
-                          category: selectedCategory,
-                          q: query,
-                          status: selectedStatus ?? "",
-                        }}
-                        sortKey="quantity"
-                      />
-                      <ColumnResizeHandle
-                        columnId="quantity"
-                        minWidth={76}
-                        tableId="requests-table"
                       />
                     </th>
                     <th
@@ -364,11 +312,6 @@ export async function RequestsWorkspace({
                         }}
                         sortKey="status"
                       />
-                      <ColumnResizeHandle
-                        columnId="status"
-                        minWidth={120}
-                        tableId="requests-table"
-                      />
                     </th>
                     <th
                       aria-sort={sortAria("stock", selectedSort, selectedDir)}
@@ -385,11 +328,6 @@ export async function RequestsWorkspace({
                           status: selectedStatus ?? "",
                         }}
                         sortKey="stock"
-                      />
-                      <ColumnResizeHandle
-                        columnId="stock"
-                        minWidth={140}
-                        tableId="requests-table"
                       />
                     </th>
                     <th
@@ -408,11 +346,6 @@ export async function RequestsWorkspace({
                         }}
                         sortKey="created"
                       />
-                      <ColumnResizeHandle
-                        columnId="created"
-                        minWidth={100}
-                        tableId="requests-table"
-                      />
                     </th>
                     <th className="col-action">
                       <span className="sr-only">Open details</span>
@@ -421,10 +354,6 @@ export async function RequestsWorkspace({
                 </thead>
                 <tbody>
                   {pagedRequests.map((request) => {
-                    const totalQuantity = request.items.reduce(
-                      (sum, item) => sum + item.requestedQuantity,
-                      0,
-                    );
                     return (
                       <ClickableRow
                         href={`/requests/${request.id}${contextQuery}`}
@@ -449,7 +378,6 @@ export async function RequestsWorkspace({
                         <td title={formatItemTitle(request.items)}>
                           <RequestItemChips items={request.items} />
                         </td>
-                        <td className="numeric-cell">{totalQuantity}</td>
                         <td>
                           <StatusBadge status={request.status} />
                         </td>
@@ -604,11 +532,4 @@ function formatDate(value: string) {
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function formatFilterSummary(filters: Record<string, string>) {
-  const active = Object.entries(filters)
-    .filter(([, value]) => value)
-    .map(([key, value]) => `${key}=${value}`);
-  return active.length > 0 ? active.join(", ") : "none";
 }

@@ -36,9 +36,14 @@ export function RequestDetailFooter({
         status={request.status}
       />
       {request.status === "approved" && !canFulfill ? (
-        <p className="alert alert-error">
-          Issuance is disabled because one or more requested items do not have
-          enough available stock.
+        <p className="action-footer-note">
+          {request.items
+            .filter((item) => item.availableQuantity < item.requestedQuantity)
+            .map(
+              (item) =>
+                `${item.itemName}: ${item.requestedQuantity - item.availableQuantity} ${item.unit} short`,
+            )
+            .join(" · ")}
         </p>
       ) : null}
     </div>
@@ -77,6 +82,11 @@ function AdminActions({
   if (status === "approved") {
     return (
       <div className="request-action-buttons">
+        {!canFulfill && (
+          <a className="button button-primary" href="#record-stock">
+            Record stock received
+          </a>
+        )}
         <DetailStatusForm
           disabled={!canFulfill}
           disabledReason="Insufficient stock for issuance."

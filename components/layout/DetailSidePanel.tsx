@@ -38,7 +38,7 @@ export function DetailSidePanel({
 
   useEffect(() => {
     function close(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !document.querySelector("dialog[open]")) {
         sessionStorage.setItem("restore-row-focus", "1");
         router.push(closeHref);
       }

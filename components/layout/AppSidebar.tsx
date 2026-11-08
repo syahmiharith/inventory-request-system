@@ -54,7 +54,7 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [width, setWidth] = useState(248);
+  const [width, setWidth] = useState(220);
 
   useEffect(() => {
     const storedCollapsed = localStorage.getItem("sidebar-collapsed");
@@ -117,12 +117,15 @@ export function AppSidebar({ currentUser }: { currentUser: User }) {
     >
       <div className="sidebar-inner" data-testid="sidebar">
         <Link
+          aria-label="Inventory home"
           className="sidebar-brand"
           href="/"
           title="Inventory Request System"
         >
-          <span className="brand-mark">IR</span>
-          {!collapsed ? <strong>Inventory Request System</strong> : null}
+          <span className="brand-mark">
+            <Package aria-hidden="true" size={18} />
+          </span>
+          {!collapsed ? <strong>Inventory</strong> : null}
         </Link>
 
         <div

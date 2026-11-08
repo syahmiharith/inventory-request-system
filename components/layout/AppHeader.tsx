@@ -1,5 +1,6 @@
 "use client";
 
+import { DemoWorkspaceControls } from "@/components/ui/DemoWorkspaceControls";
 import type { User } from "@/db/schema";
 import { DemoUserSwitcher } from "@/components/ui/DemoUserSwitcher";
 import Link from "next/link";
@@ -16,10 +17,7 @@ export function AppHeader({
   return (
     <header className="app-header" data-testid="app-header">
       <div className="header-title">
-        <div>
-          <span className="breadcrumb">Internal Inventory Operations</span>
-          <h1>Inventory Request System</h1>
-        </div>
+        <DemoWorkspaceControls />
       </div>
 
       <div className="header-actions">
@@ -27,7 +25,7 @@ export function AppHeader({
           initialUsers={demoUsers}
           initialCurrentUser={currentUser}
         />
-        <div className="viewer-chip" data-testid="profile-summary">
+        <div className="viewer-chip sr-only" data-testid="profile-summary">
           <strong>{initials(currentUser.name)}</strong>
           <span>{currentUser.role === "admin" ? "Admin" : "Employee"}</span>
         </div>

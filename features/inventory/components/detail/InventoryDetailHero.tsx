@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { StockBadge } from "@/components/ui/badges/StockBadge";
 import { stockStatusFromQuantities } from "@/lib/inventory";
 import type { InventoryItemDetail } from "./types";
@@ -28,32 +27,14 @@ export function InventoryDetailHero({ item }: { item: InventoryItemDetail }) {
       </div>
 
       <div className="inventory-health-summary">
-        <span
-          aria-label={
-            stockHealthPercent === null
-              ? "Stock health unavailable"
-              : `Stock health ${stockHealthPercent} percent`
-          }
-          className="stock-health-ring stock-health-ring-large"
-          role="meter"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={stockHealthPercent ?? undefined}
-          style={
-            {
-              "--stock-health": `${(stockHealthPercent ?? 0) * 3.6}deg`,
-            } as CSSProperties
-          }
-        >
-          <strong>{stockHealthLabel}</strong>
-        </span>
         <div>
           <span>Available stock</span>
           <strong>
             {item.available} {item.unit}
           </strong>
           <p>
-            Health compares available stock with the internal operating target.
+            Stock health {stockHealthLabel} · compared with the operating
+            target.
           </p>
         </div>
       </div>

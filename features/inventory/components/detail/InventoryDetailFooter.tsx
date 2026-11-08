@@ -11,13 +11,13 @@ export function InventoryItemDetailFooter({
     return (
       <div className="item-panel-actions">
         <a
-          className="button button-compact button-panel-secondary"
+          className="button button-compact button-secondary"
           href={`/requests?status=pending&q=${encodeURIComponent(item.sku)}`}
         >
           View pending requests
         </a>
         <a
-          className="button button-compact button-panel-primary"
+          className="button button-compact button-primary"
           href={`/requests?status=approved&q=${encodeURIComponent(item.sku)}`}
         >
           Review approved requests
@@ -36,7 +36,7 @@ export function InventoryItemDetailFooter({
 
   return (
     <a
-      className="button button-compact button-panel-primary"
+      className="button button-compact button-primary"
       href={`/requests/new?itemId=${item.id}`}
     >
       Request Item

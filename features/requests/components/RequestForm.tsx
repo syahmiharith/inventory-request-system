@@ -243,7 +243,7 @@ export function RequestForm({
       description="Submit an inventory request for admin review."
       disableEscapeClose={showDiscardDialog}
       onClose={closeForm}
-      title="New Request"
+      title="New request"
     >
       <form
         action={formAction}
@@ -282,13 +282,20 @@ export function RequestForm({
               className="input"
               type="date"
               name="requiredBy"
+              aria-invalid={Boolean(state.errors?.requiredBy)}
+              aria-describedby={
+                state.errors?.requiredBy ? "required-by-error" : undefined
+              }
               value={requiredBy}
               onChange={(event) => setRequiredBy(event.target.value)}
               required
             />
-            <FieldError message={state.errors?.requiredBy} />
+            <FieldError
+              id="required-by-error"
+              message={state.errors?.requiredBy}
+            />
           </label>
-          <label className="field">
+          <label className="field field-full">
             <span id="request-reason-label">Reason</span>
             <textarea
               aria-labelledby="request-reason-label"
@@ -373,6 +380,11 @@ export function RequestForm({
                     className="input"
                     disabled={itemLookup.loading || options.length === 0}
                     name="itemId"
+                    aria-describedby={
+                      state.errors?.[`items.${index}.itemId`]
+                        ? `item-error-${line.id}`
+                        : undefined
+                    }
                     onChange={(event) =>
                       updateLine(line.id, { itemId: event.target.value })
                     }
@@ -384,12 +396,12 @@ export function RequestForm({
                     ) : null}
                     {options.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} ({item.sku}) - {item.available} available
-                        {item.available <= 0 ? " - Out of stock" : ""}
+                        {item.name} ({item.sku})
                       </option>
                     ))}
                   </select>
                   <FieldError
+                    id={`item-error-${line.id}`}
                     message={state.errors?.[`items.${index}.itemId`]}
                   />
                   {duplicate ? (
@@ -401,7 +413,7 @@ export function RequestForm({
 
                 <div className="field">
                   <span>Available</span>
-                  <div className="input read-only-field">
+                  <div className="stock-readout">
                     {selectedItem
                       ? `${selectedItem.available} available`
                       : "No item selected"}
@@ -417,6 +429,11 @@ export function RequestForm({
                     className="input"
                     min="1"
                     name="quantityRequested"
+                    aria-describedby={
+                      state.errors?.[`items.${index}.quantityRequested`]
+                        ? `quantity-error-${line.id}`
+                        : undefined
+                    }
                     onChange={(event) =>
                       updateLine(line.id, {
                         quantity: Number(event.target.value),
@@ -428,12 +445,13 @@ export function RequestForm({
                     value={line.quantity}
                   />
                   <FieldError
+                    id={`quantity-error-${line.id}`}
                     message={state.errors?.[`items.${index}.quantityRequested`]}
                   />
                 </label>
 
                 <button
-                  aria-label="Remove item line"
+                  aria-label={`Remove item ${index + 1}`}
                   className="button button-secondary remove-line"
                   disabled={lines.length === 1}
                   onClick={() => removeLine(line.id)}
@@ -447,8 +465,9 @@ export function RequestForm({
                     aria-live="polite"
                     className="alert alert-info line-warning"
                   >
-                    Requested quantity exceeds current stock. Issuance will be
-                    blocked until enough stock exists.
+                    {line.quantity - (selectedItem?.available ?? 0)} short. You
+                    can submit this request; stock must be received before it
+                    can be issued.
                   </p>
                 ) : null}
               </div>
