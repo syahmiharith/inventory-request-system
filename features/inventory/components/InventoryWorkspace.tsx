@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
-import type { CSSProperties } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
 import { ClickableRow } from "@/components/ui/ClickableRow";
@@ -8,7 +7,6 @@ import { DataTable } from "@/components/ui/table/DataTable";
 import { DataToolbar } from "@/components/ui/DataToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pagination } from "@/components/ui/table/Pagination";
-import { ColumnResizeHandle } from "@/components/ui/table/ResizableDataTable";
 import { SortHeader, sortAria } from "@/components/ui/table/SortHeader";
 import { StockBadge } from "@/components/ui/badges/StockBadge";
 import type { User } from "@/db/schema";
@@ -38,16 +36,6 @@ const inventorySortKeys = [
   "updated",
 ] as const;
 const sortDirections = ["asc", "desc"] as const;
-const inventoryTableColumns = [
-  { id: "item", defaultWidth: 320, minWidth: 220 },
-  { id: "sku", defaultWidth: 210, minWidth: 170 },
-  { id: "available", defaultWidth: 150, minWidth: 120 },
-  { id: "health", defaultWidth: 220, minWidth: 170 },
-  { id: "demand", defaultWidth: 150, minWidth: 120 },
-  { id: "updated", defaultWidth: 130, minWidth: 110 },
-  { id: "action", defaultWidth: 48, minWidth: 44 },
-];
-
 export async function InventoryWorkspace({
   currentUser,
   overlay,
@@ -116,7 +104,7 @@ export async function InventoryWorkspace({
         <section data-testid="inventory-page">
           <PageHeader
             title="Inventory"
-            description="Browse current stock levels and identify low-stock or out-of-stock items."
+            description="Stock on hand, held aside, and available to issue."
             actions={isAdmin ? <InventoryCreateModalButton /> : null}
           />
 
@@ -133,7 +121,11 @@ export async function InventoryWorkspace({
           ) : null}
 
           <section className="panel inventory-control-panel">
-            <form action="/inventory">
+            <form
+              action="/inventory"
+              className="list-filter-form"
+              role="search"
+            >
               <DataToolbar>
                 <label className="search-field">
                   <span className="sr-only">Search inventory</span>
@@ -142,14 +134,14 @@ export async function InventoryWorkspace({
                     className="input"
                     defaultValue={query}
                     name="q"
-                    placeholder="Search by item name or SKU"
+                    placeholder="Search supplies"
                     type="search"
                   />
                 </label>
                 <label className="filter-select">
                   <span>Category</span>
                   <select defaultValue={selectedCategory} name="category">
-                    <option value="">All categories</option>
+                    <option value="">All</option>
                     {categories.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -160,14 +152,14 @@ export async function InventoryWorkspace({
                 <label className="filter-select">
                   <span>Stock</span>
                   <select defaultValue={selectedStock} name="stock">
-                    <option value="">All stock</option>
+                    <option value="">All</option>
                     <option value="in">In stock</option>
                     <option value="low">Low stock</option>
                     <option value="out">Out of stock</option>
                   </select>
                 </label>
                 <button className="button button-secondary" type="submit">
-                  Filter
+                  Apply
                 </button>
                 {query ||
                 selectedCategory ||
@@ -180,33 +172,36 @@ export async function InventoryWorkspace({
               </DataToolbar>
             </form>
             <p className="list-count-meta">
-              Showing {pagedItems.length} of {itemResult.totalCount} inventory
-              rows · filters{" "}
-              {formatFilterSummary({
-                category: selectedCategory,
-                q: query,
-                stock: selectedStock,
-              })}
+              {itemResult.totalCount}{" "}
+              {itemResult.totalCount === 1 ? "supply" : "supplies"}
             </p>
 
             {itemResult.totalCount === 0 ? (
               <EmptyState
-                action={isAdmin ? <InventoryCreateModalButton /> : null}
+                title={
+                  Boolean(query || selectedCategory || selectedStock)
+                    ? "No matching supplies"
+                    : "No supplies yet"
+                }
+                action={
+                  Boolean(query || selectedCategory || selectedStock) ? (
+                    <Link className="button button-secondary" href="/inventory">
+                      Clear filters
+                    </Link>
+                  ) : isAdmin ? (
+                    <InventoryCreateModalButton />
+                  ) : null
+                }
               >
-                No inventory items match this view.
+                {Boolean(query || selectedCategory || selectedStock)
+                  ? "Try a different search or clear your filters to see all supplies."
+                  : "Add your first supply to start tracking stock."}
               </EmptyState>
             ) : (
-              <DataTable
-                className="inventory-table"
-                columns={inventoryTableColumns}
-                tableId="inventory-table"
-              >
+              <DataTable className="inventory-table">
                 <thead>
                   <tr>
-                    <th
-                      aria-sort={sortAria("name", selectedSort, selectedDir)}
-                      className="col-item"
-                    >
+                    <th aria-sort={sortAria("name", selectedSort, selectedDir)}>
                       <SortHeader
                         activeDir={selectedDir}
                         activeSort={selectedSort}
@@ -219,41 +214,18 @@ export async function InventoryWorkspace({
                         }}
                         sortKey="name"
                       />
-                      <ColumnResizeHandle
-                        columnId="item"
-                        minWidth={220}
-                        tableId="inventory-table"
-                      />
                     </th>
-                    <th
-                      aria-sort={sortAria("sku", selectedSort, selectedDir)}
-                      className="col-code col-sku"
-                    >
-                      <SortHeader
-                        activeDir={selectedDir}
-                        activeSort={selectedSort}
-                        basePath="/inventory"
-                        label="SKU"
-                        params={{
-                          category: selectedCategory,
-                          q: query,
-                          stock: selectedStock,
-                        }}
-                        sortKey="sku"
-                      />
-                      <ColumnResizeHandle
-                        columnId="sku"
-                        minWidth={170}
-                        tableId="inventory-table"
-                      />
-                    </th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th className="numeric-cell">On hand</th>
+                    <th className="numeric-cell">Held aside</th>
                     <th
                       aria-sort={sortAria(
                         "available",
                         selectedSort,
                         selectedDir,
                       )}
-                      className="col-number"
+                      className="numeric-cell"
                     >
                       <SortHeader
                         activeDir={selectedDir}
@@ -267,69 +239,9 @@ export async function InventoryWorkspace({
                         }}
                         sortKey="available"
                       />
-                      <ColumnResizeHandle
-                        columnId="available"
-                        minWidth={120}
-                        tableId="inventory-table"
-                      />
                     </th>
-                    <th
-                      aria-sort={sortAria(
-                        "stockHealth",
-                        selectedSort,
-                        selectedDir,
-                      )}
-                      className="col-stock-health"
-                    >
-                      <SortHeader
-                        activeDir={selectedDir}
-                        activeSort={selectedSort}
-                        basePath="/inventory"
-                        label="Stock Health"
-                        params={{
-                          category: selectedCategory,
-                          q: query,
-                          stock: selectedStock,
-                        }}
-                        sortKey="stockHealth"
-                      />
-                      <ColumnResizeHandle
-                        columnId="health"
-                        minWidth={170}
-                        tableId="inventory-table"
-                      />
-                    </th>
-                    <th className="col-demand">
-                      Demand
-                      <ColumnResizeHandle
-                        columnId="demand"
-                        minWidth={120}
-                        tableId="inventory-table"
-                      />
-                    </th>
-                    <th
-                      aria-sort={sortAria("updated", selectedSort, selectedDir)}
-                      className="col-date"
-                    >
-                      <SortHeader
-                        activeDir={selectedDir}
-                        activeSort={selectedSort}
-                        basePath="/inventory"
-                        label="Updated"
-                        params={{
-                          category: selectedCategory,
-                          q: query,
-                          stock: selectedStock,
-                        }}
-                        sortKey="updated"
-                      />
-                      <ColumnResizeHandle
-                        columnId="updated"
-                        minWidth={110}
-                        tableId="inventory-table"
-                      />
-                    </th>
-                    <th className="col-action">
+                    <th>Status</th>
+                    <th>
                       <span className="sr-only">Open details</span>
                     </th>
                   </tr>
@@ -356,39 +268,20 @@ export async function InventoryWorkspace({
                       >
                         <td className="item-primary-cell" title={item.name}>
                           <strong>{item.name}</strong>
-                          <span className="cell-subtext">
-                            {item.category} · {item.warehouse}
-                          </span>
+                          <span className="cell-subtext">{item.sku}</span>
                         </td>
-                        <td className="mono-cell sku-cell" title={item.sku}>
-                          {item.sku}
+                        <td>{item.category}</td>
+                        <td>{item.unit}</td>
+                        <td className="numeric-cell">{item.quantityOnHand}</td>
+                        <td className="numeric-cell">
+                          {item.quantityReserved}
                         </td>
-                        <td className="inventory-quantity-cell">
+                        <td className="numeric-cell">
                           <strong>{item.available}</strong>
-                          <span className="cell-subtext">
-                            {item.unit} · {item.quantityReserved} reserved
-                          </span>
+                          <span className="mobile-unit"> {item.unit}</span>
                         </td>
                         <td>
-                          <StockHealthCell
-                            percent={item.stockHealthPercent}
-                            status={status}
-                          />
-                        </td>
-                        <td className="demand-cell">
-                          {item.activeDemand > 0 ? (
-                            <>
-                              <strong>{item.activeDemand}</strong>
-                              <span className="cell-subtext">
-                                active demand
-                              </span>
-                            </>
-                          ) : (
-                            <span className="muted">No active demand</span>
-                          )}
-                        </td>
-                        <td className="date-cell">
-                          {formatDate(item.updatedAt)}
+                          <StockBadge status={status} />
                         </td>
                         <td className="row-chevron-cell">
                           <ChevronRight aria-hidden="true" />
@@ -399,6 +292,9 @@ export async function InventoryWorkspace({
                 </tbody>
               </DataTable>
             )}
+            <p className="ledger-note">
+              Available = on hand − held aside. Approval does not reserve stock.
+            </p>
             {itemResult.totalCount > pageSize ? (
               <Pagination
                 basePath="/inventory"
@@ -419,60 +315,4 @@ export async function InventoryWorkspace({
       </main>
     </WorkspaceLayout>
   );
-}
-
-function StockHealthCell({
-  percent,
-  status,
-}: {
-  percent: number | null | undefined;
-  status: ReturnType<typeof stockStatusFromQuantities>;
-}) {
-  const safePercent = normalizeStockHealthPercent(percent);
-  return (
-    <div className="stock-health-cell">
-      <span
-        aria-label={
-          safePercent === null
-            ? "Stock health unavailable"
-            : `Stock health ${safePercent} percent`
-        }
-        className="stock-health-ring"
-        role="meter"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={safePercent ?? undefined}
-        style={
-          {
-            "--stock-health": `${(safePercent ?? 0) * 3.6}deg`,
-          } as CSSProperties
-        }
-      >
-        <strong>{safePercent === null ? "-" : `${safePercent}%`}</strong>
-      </span>
-      <StockBadge status={status} />
-    </div>
-  );
-}
-
-function normalizeStockHealthPercent(value: number | null | undefined) {
-  if (!Number.isFinite(value)) {
-    return null;
-  }
-
-  return Math.min(100, Math.max(0, Math.round(Number(value))));
-}
-
-function formatDate(value: Date | string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function formatFilterSummary(filters: Record<string, string>) {
-  const active = Object.entries(filters)
-    .filter(([, value]) => value)
-    .map(([key, value]) => `${key}=${value}`);
-  return active.length > 0 ? active.join(", ") : "none";
 }

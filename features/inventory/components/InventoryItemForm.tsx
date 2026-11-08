@@ -17,6 +17,13 @@ export function InventoryItemForm({
   onClose?: () => void;
 } = {}) {
   const router = useRouter();
+  const [values, setValues] = useState({
+    name: "",
+    sku: "",
+    category: "",
+    quantityAvailable: "",
+    lowStockThreshold: "5",
+  });
   const [dirty, setDirty] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -43,14 +50,15 @@ export function InventoryItemForm({
 
   return (
     <FormModal
-      description="Create a stock item with a SKU, category, and threshold."
+      description="All fields are required unless marked optional."
       disableEscapeClose={showDiscardDialog}
       onClose={closeForm}
-      title="Add Inventory Item"
+      title="Add inventory item"
     >
       <form
         action={formAction}
         className="form-panel"
+        aria-busy={pending}
         onChange={() => setDirty(true)}
       >
         {state.message ? (
@@ -66,9 +74,22 @@ export function InventoryItemForm({
               aria-invalid={Boolean(state.errors?.name)}
               className="input"
               name="name"
+              value={values.name}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
+              aria-describedby={
+                state.errors?.name ? "inventory-name-error" : undefined
+              }
               required
             />
-            <FieldError message={state.errors?.name} />
+            <FieldError
+              id="inventory-name-error"
+              message={state.errors?.name}
+            />
           </label>
 
           <label className="field">
@@ -77,9 +98,19 @@ export function InventoryItemForm({
               aria-invalid={Boolean(state.errors?.sku)}
               className="input"
               name="sku"
+              value={values.sku}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  sku: event.target.value,
+                }))
+              }
+              aria-describedby={
+                state.errors?.sku ? "inventory-sku-error" : undefined
+              }
               required
             />
-            <FieldError message={state.errors?.sku} />
+            <FieldError id="inventory-sku-error" message={state.errors?.sku} />
           </label>
 
           <label className="field">
@@ -88,37 +119,81 @@ export function InventoryItemForm({
               aria-invalid={Boolean(state.errors?.category)}
               className="input"
               name="category"
+              value={values.category}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }))
+              }
+              aria-describedby={
+                state.errors?.category ? "inventory-category-error" : undefined
+              }
               required
             />
-            <FieldError message={state.errors?.category} />
+            <FieldError
+              id="inventory-category-error"
+              message={state.errors?.category}
+            />
           </label>
 
           <label className="field">
-            <span>Quantity available</span>
+            <span>Opening stock</span>
             <input
               aria-invalid={Boolean(state.errors?.quantityOnHand)}
               className="input"
               min="0"
               name="quantityAvailable"
+              value={values.quantityAvailable}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  quantityAvailable: event.target.value,
+                }))
+              }
+              aria-describedby={
+                state.errors?.quantityOnHand
+                  ? "inventory-quantityAvailable-error"
+                  : undefined
+              }
               required
               step="1"
               type="number"
             />
-            <FieldError message={state.errors?.quantityOnHand} />
+            <FieldError
+              id="inventory-quantityAvailable-error"
+              message={state.errors?.quantityOnHand}
+            />
           </label>
 
           <label className="field">
-            <span>Low-stock threshold</span>
+            <span>
+              Low-stock threshold <small>(optional)</small>
+            </span>
             <input
               aria-invalid={Boolean(state.errors?.reorderPoint)}
               className="input"
-              defaultValue="5"
               min="0"
               name="lowStockThreshold"
+              value={values.lowStockThreshold}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  lowStockThreshold: event.target.value,
+                }))
+              }
+              aria-describedby={
+                state.errors?.reorderPoint
+                  ? "inventory-lowStockThreshold-error"
+                  : undefined
+              }
               step="1"
               type="number"
             />
-            <FieldError message={state.errors?.reorderPoint} />
+            <FieldError
+              id="inventory-lowStockThreshold-error"
+              message={state.errors?.reorderPoint}
+            />
           </label>
         </div>
 
@@ -151,9 +226,13 @@ export function InventoryItemForm({
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ message, id }: { message?: string; id: string }) {
   if (!message) {
     return null;
   }
-  return <span className="form-message error">{message}</span>;
+  return (
+    <span id={id} className="form-message error">
+      {message}
+    </span>
+  );
 }

@@ -17,8 +17,11 @@ for (const viewport of [
     await expect(
       page.getByRole("button", { name: "Approve", exact: true }),
     ).toBeVisible();
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Approve", exact: true }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Confirm approve", exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: "Issue", exact: true }),
     ).toBeDisabled();
@@ -35,8 +38,11 @@ for (const viewport of [
     await expect(
       page.getByRole("button", { name: "Issue", exact: true }),
     ).toBeEnabled({ timeout: 15000 });
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Issue", exact: true }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Confirm issue", exact: true })
+      .click();
     await expect(
       page.getByText("Request Issued", { exact: true }),
     ).toBeVisible();

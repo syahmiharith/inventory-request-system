@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { ActionDialog } from "./modal/ActionDialog";
 export function DemoWorkspaceControls() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
   async function reset() {
-    if (!window.confirm("Reset your demo workspace and start again?")) return;
+    setError("");
     setPending(true);
     try {
       const response = await fetch("/api/demo/reset", { method: "POST" });
@@ -17,15 +19,44 @@ export function DemoWorkspaceControls() {
   }
   return (
     <section className="demo-workspace-bar" aria-label="Demo workspace">
-      <span>Demo workspace · 24-hour session</span>
+      <span>Private workspace · 24 hours</span>
       <button
-        className="button button-secondary button-compact"
+        className="button button-quiet button-compact"
         disabled={pending}
-        onClick={reset}
+        onClick={() => setConfirming(true)}
       >
         {pending ? "Resetting…" : "Reset my demo"}
       </button>
-      {error ? (
+      {confirming && (
+        <ActionDialog
+          title="Reset this workspace?"
+          busy={pending}
+          onClose={() => setConfirming(false)}
+        >
+          <p>
+            Your demo requests and stock changes will be replaced with the
+            starting supplies and examples.
+          </p>
+          {error && <p role="alert">{error}</p>}
+          <div className="dialog-actions">
+            <button
+              className="button button-secondary"
+              disabled={pending}
+              onClick={() => setConfirming(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="button button-danger"
+              disabled={pending}
+              onClick={reset}
+            >
+              {pending ? "Resetting…" : "Reset my demo"}
+            </button>
+          </div>
+        </ActionDialog>
+      )}
+      {error && !confirming ? (
         <p className="form-message error" role="alert">
           {error}
         </p>

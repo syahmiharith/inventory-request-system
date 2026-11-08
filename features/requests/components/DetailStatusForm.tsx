@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { ActionDialog } from "@/components/ui/modal/ActionDialog";
 import type { RequestStatus } from "@/lib/constants";
 
 export function DetailStatusForm({
@@ -23,24 +24,16 @@ export function DetailStatusForm({
   const [key] = useState(() => crypto.randomUUID());
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [reason, setReason] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (disabled || pending) return;
-    let adminComment: string | undefined;
-    if (status === "rejected") {
-      const note = window.prompt("Reason for rejection", "");
-      if (note === null) return;
-      adminComment = note.trim();
-      if (!adminComment) {
-        setError("A rejection reason is required.");
-        return;
-      }
-    } else if (
-      !window.confirm(
-        `Confirm ${label.toLowerCase()}?${fulfillPreview ? `\n\n${fulfillPreview}` : ""}`,
-      )
-    )
+    const adminComment = status === "rejected" ? reason.trim() : undefined;
+    if (status === "rejected" && !adminComment) {
+      setError("A rejection reason is required.");
       return;
+    }
     setPending(true);
     setError("");
     try {
@@ -53,6 +46,7 @@ export function DetailStatusForm({
       if (!response.ok)
         throw new Error(result.error ?? "Unable to update request.");
       const url = new URL(window.location.href);
+      url.hash = "";
       url.searchParams.delete("error");
       url.searchParams.set(
         "success",
@@ -70,16 +64,74 @@ export function DetailStatusForm({
     }
   }
   return (
-    <form onSubmit={submit}>
+    <>
       <button
-        type="submit"
-        className={`button button-${variant}`}
+        type="button"
+        className={`button button-${status === "rejected" ? variant : "primary"}`}
         disabled={disabled || pending}
-        title={disabledReason}
+        title={disabled ? disabledReason : undefined}
+        onClick={() => {
+          setError("");
+          setConfirming(true);
+        }}
       >
         {pending ? "Updating…" : label}
       </button>
-      {error ? <p role="alert">{error}</p> : null}
-    </form>
+      {confirming && (
+        <ActionDialog
+          title={`${label} request?`}
+          busy={pending}
+          onClose={() => setConfirming(false)}
+        >
+          <p>
+            {status === "approved"
+              ? "Approval leaves stock available. Supplies are deducted only when issued."
+              : status === "fulfilled"
+                ? "Issuing deducts these supplies from available stock. This request can only be issued once."
+                : "The requester will see your reason. Stock will not change."}
+          </p>
+          {fulfillPreview && (
+            <pre className="issuance-preview">{fulfillPreview}</pre>
+          )}
+          <form onSubmit={submit}>
+            {status === "rejected" && (
+              <label className="field">
+                Reason for rejection
+                <textarea
+                  autoFocus
+                  className="input"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  required
+                  maxLength={500}
+                />
+              </label>
+            )}
+            {error && (
+              <p role="alert" className="form-message error">
+                {error}
+              </p>
+            )}
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={pending}
+                onClick={() => setConfirming(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`button button-${status === "rejected" ? "danger" : "primary"}`}
+                type="submit"
+                disabled={pending}
+              >
+                {pending ? "Updating…" : `Confirm ${label.toLowerCase()}`}
+              </button>
+            </div>
+          </form>
+        </ActionDialog>
+      )}
+    </>
   );
 }

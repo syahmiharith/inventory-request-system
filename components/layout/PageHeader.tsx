@@ -12,7 +12,7 @@ export function PageHeader({
   return (
     <div className="route-heading">
       <div>
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         {description ? <p>{description}</p> : null}
       </div>
       {actions}

@@ -15,11 +15,6 @@ export function RequestDetailPanel({
   query?: { error?: string; success?: string };
   request: NonNullable<RequestDetail>;
 }) {
-  const totalQuantity = request.items.reduce(
-    (sum, item) => sum + item.requestedQuantity,
-    0,
-  );
-
   return (
     <div className="request-detail-sheet" data-testid="request-detail-panel">
       {query?.success ? (
@@ -34,7 +29,7 @@ export function RequestDetailPanel({
         </p>
       ) : null}
 
-      <RequestDetailHero request={request} totalQuantity={totalQuantity} />
+      <RequestDetailHero request={request} />
 
       <section className="request-reason-card">
         <span>Reason</span>
@@ -50,7 +45,11 @@ export function RequestDetailPanel({
       {!isAdmin ? <ReviewAsAdminButton requestId={request.id} /> : null}
       <RequestImpactList request={request} />
       {isAdmin && request.status === "approved" ? (
-        <section className="detail-section">
+        <section
+          className="detail-section receipt-section"
+          id="record-stock"
+          tabIndex={-1}
+        >
           <div className="detail-section-header">
             <div>
               <h3>Record stock received</h3>
@@ -63,7 +62,11 @@ export function RequestDetailPanel({
           <StockReceiptForm
             requestId={request.id}
             receiptKey={randomUUID()}
-            items={request.items}
+            items={[...request.items].sort(
+              (a, b) =>
+                Number(b.availableQuantity < b.requestedQuantity) -
+                Number(a.availableQuantity < a.requestedQuantity),
+            )}
           />
         </section>
       ) : null}

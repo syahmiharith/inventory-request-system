@@ -36,6 +36,7 @@ export function StockReceiptForm({
         return;
       }
       const url = new URL(window.location.href);
+      url.hash = "";
       url.searchParams.set(
         "success",
         "Stock received. Review availability and issue the request.",
@@ -53,7 +54,7 @@ export function StockReceiptForm({
   }
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} aria-busy={pending}>
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="key" value={key} />
       <fieldset disabled={pending} className="form-grid receipt-fields">
@@ -87,7 +88,19 @@ export function StockReceiptForm({
         </label>
         <label className="field">
           Delivery reference or reason
-          <input className="input" name="reason" maxLength={500} required />
+          <input
+            className="input"
+            name="reason"
+            maxLength={500}
+            required
+            aria-describedby={`receipt-reference-hint-${requestId}`}
+          />
+          <span
+            className="field-hint"
+            id={`receipt-reference-hint-${requestId}`}
+          >
+            Use a delivery note number or a brief reason for the receipt.
+          </span>
         </label>
         <button type="submit" className="button button-primary">
           {pending ? "Recording delivery…" : "Record stock received"}

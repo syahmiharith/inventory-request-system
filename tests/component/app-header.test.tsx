@@ -24,9 +24,7 @@ const users = [
 describe("AppHeader", () => {
   it("shows the demo user switcher and current viewer summary", () => {
     render(<AppHeader currentUser={users[0]} demoUsers={users} />);
-    expect(
-      screen.getByRole("heading", { name: "Inventory Request System" }),
-    ).toBeVisible();
+    expect(screen.getByText("Private workspace · 24 hours")).toBeVisible();
     expect(screen.getByText("Viewing as")).toBeVisible();
     expect(screen.getByTestId("profile-summary")).toHaveTextContent("AA");
     expect(screen.getByTestId("profile-summary")).toHaveTextContent("Admin");

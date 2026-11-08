@@ -6,25 +6,23 @@ test("smoke loads core routes", async ({ page }) => {
   await switchDemoUser(page, "Aisha Admin (admin)");
 
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "Operations Dashboard" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
   await page.goto("/inventory");
   await expect(page.getByTestId("inventory-page")).toBeVisible();
   await page.getByRole("button", { name: "Add Item" }).click();
   await expect(page).toHaveURL(/\/inventory$/);
   await expect(
-    page.getByRole("heading", { name: "Add Inventory Item" }).first(),
+    page.getByRole("heading", { name: "Add inventory item" }).first(),
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("heading", { name: "Add Inventory Item" }),
+    page.getByRole("heading", { name: "Add inventory item" }),
   ).toHaveCount(0);
 
   await page.goto("/inventory/new");
   await expect(
-    page.getByRole("heading", { name: "Add Inventory Item" }).first(),
+    page.getByRole("heading", { name: "Add inventory item" }).first(),
   ).toBeVisible();
 
   await page.goto("/requests");
@@ -35,7 +33,7 @@ test("smoke loads core routes", async ({ page }) => {
   await page.getByRole("button", { name: "Create Request" }).click();
   await expect(page).toHaveURL(/\/requests$/);
   await expect(
-    page.getByRole("heading", { name: "New Request" }).first(),
+    page.getByRole("heading", { name: "New request" }).first(),
   ).toBeVisible();
   await page.getByLabel("Reason").fill("Testing dirty Escape behavior");
   await page.keyboard.press("Escape");
@@ -43,14 +41,14 @@ test("smoke loads core routes", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "New Request" }).first(),
+    page.getByRole("heading", { name: "New request" }).first(),
   ).toBeVisible();
   await page.getByRole("button", { name: "Close form" }).click();
   await page.getByRole("button", { name: "Discard" }).click();
 
   await page.goto("/requests/new");
   await expect(
-    page.getByRole("heading", { name: "New Request" }).first(),
+    page.getByRole("heading", { name: "New request" }).first(),
   ).toBeVisible();
 });
 
@@ -93,16 +91,22 @@ test("admin approves and fulfills a request", async ({ page }) => {
   await switchDemoUser(page, "Aisha Admin (admin)");
   await page.goto(requestUrl);
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm approve", exact: true })
+    .click();
   await expect(
     page
       .getByTestId("request-detail-panel")
       .getByText("Approved", { exact: true }),
   ).toBeVisible();
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Issue" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm issue", exact: true })
+    .click();
   await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
 });
 
@@ -115,8 +119,11 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
 
   await switchDemoUser(page, "Aisha Admin (admin)");
   await page.goto(requestUrl);
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm approve", exact: true })
+    .click();
   await expect(
     page
       .getByTestId("request-detail-panel")
@@ -143,8 +150,11 @@ test("insufficient stock blocks fulfillment", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Issue", exact: true }),
   ).toBeEnabled();
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Issue", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm issue", exact: true })
+    .click();
   await expect(page.getByText("Request Issued", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Record stock received" }),

@@ -8,10 +8,8 @@ import { formatDateTime } from "./utils";
 
 export function RequestDetailHero({
   request,
-  totalQuantity,
 }: {
   request: NonNullable<RequestDetail>;
-  totalQuantity: number;
 }) {
   const stockReadiness = getStockReadinessSummary(request);
   const nextAction = getNextActionSummary(request.status, stockReadiness);
@@ -38,20 +36,11 @@ export function RequestDetailHero({
         <span className={stockReadiness.className}>{stockReadiness.label}</span>
       </div>
 
-      <dl className="request-hero-metrics">
-        <div>
-          <dt>Total quantity</dt>
-          <dd>{totalQuantity}</dd>
-        </div>
-        <div>
-          <dt>Items</dt>
-          <dd>{request.items.length}</dd>
-        </div>
-        <div>
-          <dt>Next action</dt>
-          <dd>{nextAction}</dd>
-        </div>
-      </dl>
+      <p className="request-detail-meta">
+        {request.items.length} {request.items.length === 1 ? "item" : "items"}
+        <span aria-hidden="true"> · </span>
+        {nextAction}
+      </p>
     </section>
   );
 }
