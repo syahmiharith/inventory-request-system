@@ -10,6 +10,7 @@ test("mobile navigation and role selector remain available within the viewport",
   const box = await roles.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  await page.keyboard.press("Escape");
   const navigation = page.getByRole("navigation", {
     name: "Primary navigation",
   });
@@ -224,6 +225,7 @@ test("custom filters support keyboard selection and submit the chosen values on 
   const box = await menu.boundingBox();
   expect(box!.x).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  await page.keyboard.press("Escape");
   await page.getByRole("option", { name: "Issued", exact: true }).click();
   await page.getByRole("button", { name: "Apply", exact: true }).click();
   await expect(page).toHaveURL(/status=fulfilled/);
