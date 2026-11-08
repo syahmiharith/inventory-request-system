@@ -256,12 +256,19 @@ test("mobile calendar, account menu and problem reporting", async ({
     exact: true,
   });
   await expect(calendar).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(calendar).toHaveCount(0);
+  await expect(
+    page.getByRole("textbox", { name: "Required by" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Choose required date" }).click();
   const selected = calendar.locator('[aria-pressed="true"]');
   await selected.click();
   await expect(calendar).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Required by" })).toHaveValue(
     /^\d{4}-\d{2}-\d{2}$/,
   );
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.getByRole("button", { name: /Open account menu/ }).click();
   await page
     .getByRole("dialog", { name: "Account menu" })
@@ -269,7 +276,9 @@ test("mobile calendar, account menu and problem reporting", async ({
     .click();
   await expect(page).toHaveURL(/support/);
   await page.getByRole("button", { name: "Prepare report" }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Add a short title" }),
+  ).toBeVisible();
   await page.getByLabel("Short title").fill("Demo feedback");
   await page
     .getByLabel("What happened?")

@@ -27,7 +27,11 @@ export function FormModal({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape" || disableEscapeClose) {
+      if (
+        event.key !== "Escape" ||
+        disableEscapeClose ||
+        document.querySelector("dialog[open]")
+      ) {
         return;
       }
       event.preventDefault();
