@@ -91,3 +91,7 @@ After each task, output compact audit only:
 - Remaining risks
 
 Keep changes focused. Do not refactor unrelated code.
+
+## Product UI preference
+
+Use custom-styled controls consistent with the app. Avoid browser-default disclosure triangles and unstyled native UI chrome. Preserve semantic HTML, keyboard operation and accessible state announcements.
