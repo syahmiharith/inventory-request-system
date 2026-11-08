@@ -56,6 +56,7 @@ export function InventoryItemForm({
       title="Add inventory item"
     >
       <form
+        noValidate
         action={formAction}
         className="form-panel"
         aria-busy={pending}

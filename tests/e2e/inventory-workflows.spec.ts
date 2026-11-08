@@ -212,6 +212,7 @@ async function switchDemoUser(
   label: string,
 ) {
   await page.goto("/");
+  await page.getByRole("button", { name: /Open account menu/ }).click();
   await page.getByRole("combobox", { name: "Viewing as" }).click();
   await page.getByRole("option", { name: label, exact: false }).click();
   await expect(

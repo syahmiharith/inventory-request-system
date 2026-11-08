@@ -55,7 +55,7 @@ export function StatusActionForm({
   }
 
   return (
-    <form action={action} onSubmit={handleSubmit}>
+    <form noValidate action={action} onSubmit={handleSubmit}>
       <input name="requestId" type="hidden" value={requestId} />
       <input name="status" type="hidden" value={status} />
       <input name="adminComment" ref={noteRef} type="hidden" />

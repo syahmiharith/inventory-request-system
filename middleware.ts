@@ -9,6 +9,8 @@ export function middleware(request: NextRequest) {
     destination.host = request.headers.get("host") ?? destination.host;
     destination.pathname = "/api/demo/start";
     destination.search = "";
+    if (request.nextUrl.pathname === "/support")
+      destination.searchParams.set("returnTo", "/support");
     const response = NextResponse.redirect(destination);
     response.headers.set("Cache-Control", "no-store");
     return response;
@@ -16,5 +18,11 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/inventory/:path*", "/requests/:path*"],
+  matcher: [
+    "/",
+    "/dashboard/:path*",
+    "/inventory/:path*",
+    "/requests/:path*",
+    "/support",
+  ],
 };

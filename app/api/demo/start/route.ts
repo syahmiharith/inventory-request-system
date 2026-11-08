@@ -17,7 +17,13 @@ export async function GET(request: Request) {
     const { token } = await createWorkspace();
     const response = new NextResponse(null, {
       status: 303,
-      headers: { Location: "/", "Cache-Control": "no-store" },
+      headers: {
+        Location:
+          new URL(request.url).searchParams.get("returnTo") === "/support"
+            ? "/support"
+            : "/",
+        "Cache-Control": "no-store",
+      },
     });
     response.cookies.set(workspaceCookie, token, {
       httpOnly: true,
