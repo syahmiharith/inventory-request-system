@@ -186,10 +186,6 @@ export function Dropdown({
         aria-activedescendant={open ? `${id}-option-${active}` : undefined}
         disabled={disabled}
         onKeyDown={keyDown}
-        onBlur={(event) => {
-          if (!menu.current?.contains(event.relatedTarget as Node))
-            setOpen(false);
-        }}
         onClick={() => {
           setActive(index);
           setOpen(!open);
