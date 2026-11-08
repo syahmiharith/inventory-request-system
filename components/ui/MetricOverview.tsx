@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 type Metric = {
@@ -34,7 +33,7 @@ export function MetricOverview({
       </div>
       <div className="tab-metric-grid">
         {metrics.map((metric) => (
-          <Link
+          <a
             key={metric.label}
             href={metric.href}
             className={`tab-metric${metric.active ? " is-active" : ""}`}
@@ -59,7 +58,7 @@ export function MetricOverview({
                 }}
               />
             </div>
-          </Link>
+          </a>
         ))}
       </div>
       {note ? <p className="chart-note">{note}</p> : null}
