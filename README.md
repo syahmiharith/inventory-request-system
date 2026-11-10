@@ -22,14 +22,6 @@ Each visitor receives a separate workspace with employee and administrator demo 
 
 **Demo access is isolated.** Server-validated sessions scope roles and records to a visitor workspace. Switching roles demonstrates the workflow; it does not represent an organizational identity system.
 
-```text
-Employee request → admin review → approved request
-                                         ↓
-                                 stock recheck
-                                         ↓
-                      transaction: stock + status + history
-```
-
 The UI calls Next.js Server Actions and Route Handlers. Domain services use Drizzle ORM with Supabase PostgreSQL; database credentials remain server-side. The API stores the UI's **Issued** state as `fulfilled` for compatibility.
 
 ## Maintenance evidence
