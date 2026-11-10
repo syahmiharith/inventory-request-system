@@ -122,15 +122,25 @@ Expected behavior:
 - dashboard shows real data or safe fallback
 - request and inventory lists paginate correctly
 
-## Production Hardening Backlog
+## Demo operations and organizational rollout
 
-Before real production use, add:
+The public demo's workspace limits, cleanup monitoring, failure alerts, encrypted
+backups and restore procedures are documented in [demo operations](demo-operations.md).
+Those controls do not make the seeded role switcher an organizational identity
+system.
 
-- real authentication
-- role-based authorization tied to identity
-- Supabase RLS policies if browser-side Supabase access is introduced
-- operational monitoring and alerting
-- audit retention policy
-- backup and restore process
-- migration approval process
-- mutation rate limiting
+Organizational use still needs real authentication, authorization tied to employee
+identity, audit retention and organization-specific release/recovery controls.
+If browser-side Supabase access is introduced, define explicit grants and RLS
+policies for the intended users.
+
+## Database utilities
+
+Use `npm run env:check` for a safe connection-status check. It does not print
+credentials. Generate migrations with `npm run db:generate`, then apply them
+manually to the intended database. Do not use schema pushes as an automatic
+production release step.
+
+The optional `scripts/seed-production-api.mjs` helper requires `DEMO_BASE_URL`
+to name an authorized disposable demo. It creates records and is not run by
+build or CI. No hosted target is selected by default.
